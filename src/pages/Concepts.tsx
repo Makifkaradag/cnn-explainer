@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { ActivationPlot } from '@/components/ActivationVisualizer';
 import { KernelEditor } from '@/components/KernelEditor';
 import { ChevronIcon } from '@/components/ui/Icons';
-import { Formula, Tag } from '@/components/ui/display';
+import { Formula } from '@/components/ui/display';
 import { makeKernel } from '@/data/kernels';
 import { useT } from '@/i18n/context';
 import type { Dictionary } from '@/i18n/en';
@@ -309,10 +309,7 @@ export function Concepts() {
       </section>
 
       <section className="mt-16 rounded-xl border border-line p-5">
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <h2 className="font-semibold">{c.limitsTitle}</h2>
-          <Tag kind="simulated" />
-        </div>
+        <h2 className="mb-2 font-semibold">{c.limitsTitle}</h2>
         <ul className="flex list-disc flex-col gap-1.5 pl-5 text-sm leading-relaxed text-ink-2">
           {c.limits.map((l) => (
             <li key={l}>{l}</li>

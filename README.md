@@ -20,7 +20,7 @@ The interface is available in English and Turkish. Use the EN/TR switch in the t
 
 Most introductions to CNNs give you either the equations or a diagram of boxes and arrows. I wanted something you can poke at. Each concept here is a small tool connected to a real implementation of the operation, so you can see why a feature map looks the way it does instead of taking it on faith.
 
-The app also tries not to overclaim. Every visual has a label saying whether it shows real computation, real math on a deliberately tiny network, or an illustration drawn to build intuition.
+The app also tries not to overclaim. It says plainly where the network is simplified and which pictures are drawings rather than computed output.
 
 ## Features
 

@@ -55,21 +55,6 @@ export const tr: Dictionary = {
     step: (i: number, n: number) => `adım ${i} / ${n}`,
   },
 
-  tags: {
-    computed: {
-      label: 'Gerçek hesaplama',
-      title: 'Bu sayılar uygulamadaki gerçek matematikle üretiliyor.',
-    },
-    simulated: {
-      label: 'Basitleştirilmiş simülasyon',
-      title: 'Matematik gerçek ama ağ bilerek çok küçük tutuldu. Gerçek bir CNN değil.',
-    },
-    illustrative: {
-      label: 'Temsili',
-      title: 'Sezgi kazandırmak için çizilmiş bir resim. Eğitilmiş bir ağ tarafından hesaplanmadı.',
-    },
-  },
-
   classes: ['Daire', 'Kare', 'Üçgen', 'Artı'],
 
   examples: {
@@ -162,7 +147,6 @@ export const tr: Dictionary = {
     start: 'Keşfetmeye başla',
     playground: 'Deneme alanı',
     pipelineIntro: 'Bir görüntü, on adım, tek tahmin:',
-    liveTag: 'Küçük bir CNN’in canlı çıktısı',
     tryAnother: 'Başka bir girdi dene →',
     chaptersTitle: 'On etkileşimli bölüm',
     chaptersSub: 'Her biri tek bir fikri kurcalayabileceğin bir şeye dönüştürüyor.',
@@ -185,7 +169,6 @@ export const tr: Dictionary = {
       },
     ],
     honestyTitle: 'Ne gerçek, ne basitleştirilmiş?',
-    honestySub: 'Her görselin üzerinde bir etiket var, neye baktığını hep bilirsin.',
     honestyReal:
       'Konvolüsyon, aktivasyonlar, havuzlama, flatten, dense katman ve softmax gerçek kodla, senin görüntün üzerinde canlı hesaplanıyor.',
     honestySim:
@@ -383,25 +366,25 @@ export const tr: Dictionary = {
         title: 'Katman 1',
         subtitle: 'Kenarlar',
         rfNote: '3×3 piksel',
-        tag: 'Bu uygulamada hesaplandı',
+        tag: 'bu ağın çıktısı',
       },
       {
         title: 'Katman 2',
         subtitle: 'Dokular / basit şekiller',
         rfNote: '8×8 piksel',
-        tag: 'Hesaplandı (rastgele filtreler)',
+        tag: 'bu ağ, rastgele filtreler',
       },
       {
         title: 'Katman 3',
         subtitle: 'Parçalar / desenler',
         rfNote: 'daha derin bir ağda yaklaşık 18×18',
-        tag: 'Temsili',
+        tag: 'çizim',
       },
       {
         title: 'Katman 4',
         subtitle: 'Üst düzey yapılar',
         rfNote: 'görüntünün tamamı',
-        tag: 'Temsili',
+        tag: 'çizim',
       },
     ],
     edgeNames: ['dikey', 'yatay', 'çapraz', 'dış hat'],
@@ -570,8 +553,6 @@ export const tr: Dictionary = {
     gradientNote: 'Gradyan, her ağırlığın ters yönde hareket edeceği yönü gösterir.',
     individual: 'Tek tek ağırlıklar',
     individualNote: 'Değer ve son güncellemedeki değişim (Δ).',
-    realTag: 'Gerçek gradyan inişi',
-    simTag: 'Basitleştirilmiş kurulum',
     realNote: (n: number) =>
       `Yukarıdaki sayılar softmax çapraz entropisi üzerinde gerçekten çalışan mini-batch gradyan inişinden geliyor, uydurma bir şey yok. Ama yalnızca son Dense katman (1.604 parametre) ${n} yapay çizimle eğitiliyor. Hızlı kalsın diye konvolüsyon filtreleri dondurulmuş durumda.`,
     realCnnNote:

@@ -7,7 +7,7 @@ import { LAYERS, type LayerSpec, TOTAL_PARAMS } from '@/lib/network';
 import { formatShape } from '@/lib/tensor';
 import { tensorFor } from '@/lib/views';
 import { TensorView } from './TensorView';
-import { ShapeChip, Tag } from './ui/display';
+import { ShapeChip } from './ui/display';
 import { ArrowRightIcon } from './ui/Icons';
 
 /** Small glyph whose size reflects the tensor's spatial size and depth. */
@@ -130,12 +130,16 @@ export function CNNArchitecture() {
             <div className="flex flex-col gap-3 text-sm leading-relaxed text-ink-2">
               <div className="text-xs font-medium text-ink-2">{t.arch.does}</div>
               <p>{text.explain}</p>
-              <div className="flex flex-wrap gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
                 <span className="rounded-md bg-surface-2 px-2 py-1 font-mono">
                   {t.common.parameters(layer.params.toLocaleString(t.htmlLang))}
                 </span>
-                {layer.kind === 'conv' && <Tag kind="simulated">{t.arch.notLearned}</Tag>}
-                {layer.kind === 'dense' && <Tag kind="computed">{t.arch.trainedHere}</Tag>}
+                {layer.kind === 'conv' && (
+                  <span className="text-xs text-ink-3">{t.arch.notLearned}</span>
+                )}
+                {layer.kind === 'dense' && (
+                  <span className="text-xs text-ink-3">{t.arch.trainedHere}</span>
+                )}
               </div>
             </div>
             <div className="min-w-0">

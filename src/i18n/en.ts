@@ -58,21 +58,6 @@ export const en = {
     step: (i: number, n: number) => `step ${i} / ${n}`,
   },
 
-  tags: {
-    computed: {
-      label: 'Real computation',
-      title: 'These numbers are produced by the actual math implemented in this app.',
-    },
-    simulated: {
-      label: 'Simplified simulation',
-      title: 'Real math on a deliberately tiny, simplified network, not a production CNN.',
-    },
-    illustrative: {
-      label: 'Illustrative',
-      title: 'A picture to build intuition. Not computed by a trained network.',
-    },
-  },
-
   classes: ['Circle', 'Square', 'Triangle', 'Cross'],
 
   examples: {
@@ -165,7 +150,6 @@ export const en = {
     start: 'Start Exploring',
     playground: 'CNN Playground',
     pipelineIntro: 'One image, ten steps, one prediction:',
-    liveTag: 'Live output of a tiny CNN',
     tryAnother: 'Try another input →',
     chaptersTitle: 'Ten interactive chapters',
     chaptersSub: 'Each one turns a single idea into something you can poke at.',
@@ -188,7 +172,6 @@ export const en = {
       },
     ],
     honestyTitle: 'What is real, and what is simplified?',
-    honestySub: 'Every visual carries a label so you always know what you are looking at.',
     honestyReal:
       'Convolution, activations, pooling, flatten, dense layer and softmax are real implementations, computed live on your image.',
     honestySim:
@@ -382,24 +365,24 @@ export const en = {
     rfText: (layer: string, note: string) =>
       `The highlighted area is how much of the input one neuron in ${layer} can “see”: ${note}. Stacking convolutions and pooling makes it grow.`,
     levels: [
-      { title: 'Layer 1', subtitle: 'Edges', rfNote: '3×3 pixels', tag: 'Computed by this app' },
+      { title: 'Layer 1', subtitle: 'Edges', rfNote: '3×3 pixels', tag: 'output of this network' },
       {
         title: 'Layer 2',
         subtitle: 'Textures / simple shapes',
         rfNote: '8×8 pixels',
-        tag: 'Computed (random filters)',
+        tag: 'this network, random filters',
       },
       {
         title: 'Layer 3',
         subtitle: 'Parts / patterns',
         rfNote: 'about 18×18 in a deeper net',
-        tag: 'Illustrative',
+        tag: 'drawing',
       },
       {
         title: 'Layer 4',
         subtitle: 'Higher-level structures',
         rfNote: 'the whole image',
-        tag: 'Illustrative',
+        tag: 'drawing',
       },
     ],
     edgeNames: ['vertical', 'horizontal', 'diagonal', 'outline'],
@@ -570,8 +553,6 @@ export const en = {
     gradientNote: 'The gradient shows the direction each weight is about to move (opposite sign).',
     individual: 'Individual weights',
     individualNote: 'Value and the change (Δ) from the most recent update.',
-    realTag: 'Real gradient descent',
-    simTag: 'Simplified setup',
     realNote: (n: number) =>
       `The numbers above come from actual mini-batch gradient descent on softmax cross-entropy. Nothing is faked. But only the final Dense layer (1,604 parameters) is trained, on ${n} synthetic drawings, and the convolutional filters stay frozen to keep it fast.`,
     realCnnNote:

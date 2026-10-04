@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { formatShape } from '@/lib/tensor';
 
@@ -24,32 +23,6 @@ export function Card({
       )}
       {children}
     </div>
-  );
-}
-
-export type TagKind = 'computed' | 'simulated' | 'illustrative';
-
-const TAG_STYLES: Record<TagKind, { className: string; dot: string }> = {
-  computed: { className: 'border-ok/30 text-ok', dot: 'bg-ok' },
-  simulated: { className: 'border-warn/30 text-warn', dot: 'bg-warn' },
-  illustrative: { className: 'border-accent/30 text-accent', dot: 'bg-accent' },
-};
-
-/** Labels whether a visual shows real math, a simplified simulation, or an illustration. */
-export function Tag({ kind, children }: { kind: TagKind; children?: ReactNode }) {
-  const text = useT().tags[kind];
-  const t = { ...TAG_STYLES[kind], ...text };
-  return (
-    <span
-      title={t.title}
-      className={cx(
-        'inline-flex h-6 shrink-0 items-center gap-1.5 self-start rounded-full border px-2 text-[11px] font-medium whitespace-nowrap',
-        t.className,
-      )}
-    >
-      <span className={cx('size-1.5 rounded-full', t.dot)} />
-      {children ?? t.label}
-    </span>
   );
 }
 

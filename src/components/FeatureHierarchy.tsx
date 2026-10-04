@@ -9,7 +9,6 @@ import { maxAbs } from '@/lib/tensor';
 import type { Matrix } from '@/types';
 import { FeatureMap } from './FeatureMap';
 import { PixelGrid } from './PixelGrid';
-import { Tag, type TagKind } from './ui/display';
 
 function glyph(fn: (r: Raster) => void): Matrix {
   const r = new Raster(16);
@@ -78,18 +77,8 @@ const WHOLES = [
   },
 ];
 
-interface Level {
-  rf: number;
-  tag: TagKind;
-}
-
 // Receptive-field sizes: conv 3×3 → 3, then pool + conv → 8. Layers 3–4 are hypothetical.
-const LEVELS: Level[] = [
-  { rf: 3, tag: 'computed' },
-  { rf: 8, tag: 'computed' },
-  { rf: 18, tag: 'illustrative' },
-  { rf: 28, tag: 'illustrative' },
-];
+const LEVELS = [{ rf: 3 }, { rf: 8 }, { rf: 18 }, { rf: 28 }];
 
 /** Chapter 7: an intuition for hierarchical features and growing receptive fields. */
 export function FeatureHierarchy() {
@@ -132,7 +121,7 @@ export function FeatureHierarchy() {
       </div>
 
       <div className="flex flex-col gap-3">
-        {LEVELS.map((level, li) => (
+        {LEVELS.map((_, li) => (
           <motion.div
             key={li}
             initial={{ opacity: 0, x: -12 }}
@@ -150,9 +139,7 @@ export function FeatureHierarchy() {
             <div>
               <div className="text-xs text-ink-3">{levels[li].title}</div>
               <div className="font-semibold">{levels[li].subtitle}</div>
-              <div className="mt-1.5">
-                <Tag kind={level.tag}>{levels[li].tag}</Tag>
-              </div>
+              <div className="mt-1 text-[11px] text-ink-3">{levels[li].tag}</div>
             </div>
             <div className="flex flex-wrap gap-2">
               {li === 0 &&

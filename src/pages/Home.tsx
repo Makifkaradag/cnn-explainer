@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { ExamplePicker } from '@/components/ImageInput';
 import { PipelineHero } from '@/components/PipelineHero';
 import { ButtonLink } from '@/components/ui/controls';
-import { Tag } from '@/components/ui/display';
 import { ArrowRightIcon } from '@/components/ui/Icons';
 import { useForward } from '@/hooks/useNetwork';
 import { CHAPTERS } from '@/data/chapters';
@@ -45,7 +44,6 @@ export function Home() {
               {t.home.pipelineIntro} <span className="font-medium text-ink">{t.classes[top]}</span>{' '}
               <span className="font-mono text-ink-3">({(probs[top] * 100).toFixed(0)}%)</span>
             </div>
-            <Tag kind="simulated">{t.home.liveTag}</Tag>
           </div>
           <PipelineHero />
           <div className="mt-5 flex flex-col gap-2 px-1 sm:flex-row sm:items-center sm:gap-4">
@@ -99,21 +97,11 @@ export function Home() {
       </section>
 
       <section className="mx-auto mt-16 max-w-7xl px-4 sm:px-6">
-        <div className="grid gap-6 rounded-2xl border border-line p-6 md:grid-cols-3">
-          <div>
-            <h2 className="font-semibold">{t.home.honestyTitle}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-ink-2">{t.home.honestySub}</p>
-          </div>
-          <div className="flex flex-col gap-2 text-sm text-ink-2">
-            <Tag kind="computed" />
-            <p className="leading-relaxed">{t.home.honestyReal}</p>
-          </div>
-          <div className="flex flex-col gap-2 text-sm text-ink-2">
-            <div className="flex flex-wrap gap-2">
-              <Tag kind="simulated" />
-              <Tag kind="illustrative" />
-            </div>
-            <p className="leading-relaxed">{t.home.honestySim}</p>
+        <div className="grid gap-4 rounded-2xl border border-line p-6 md:grid-cols-[1fr_2fr]">
+          <h2 className="font-semibold">{t.home.honestyTitle}</h2>
+          <div className="flex flex-col gap-3 text-sm leading-relaxed text-ink-2">
+            <p>{t.home.honestyReal}</p>
+            <p>{t.home.honestySim}</p>
           </div>
         </div>
       </section>

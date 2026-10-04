@@ -19,7 +19,7 @@ import { FeatureMapStack } from './FeatureMap';
 import { LineChart } from './LineChart';
 import { PixelGrid } from './PixelGrid';
 import { Button, Field, Segmented } from './ui/controls';
-import { Card, Note, Stat, Tag } from './ui/display';
+import { Card, Note, Stat } from './ui/display';
 import { PauseIcon, PlayIcon, ResetIcon, StepIcon } from './ui/Icons';
 
 /** forward pass → prediction → loss → backprop → weight update (labels come from i18n). */
@@ -392,13 +392,7 @@ export function TrainingSimulator() {
       </div>
 
       <div className="flex flex-col gap-3 md:flex-row">
-        <Note className="flex-1">
-          <div className="mb-1.5 flex flex-wrap gap-2">
-            <Tag kind="computed">{tt.realTag}</Tag>
-            <Tag kind="simulated">{tt.simTag}</Tag>
-          </div>
-          {tt.realNote(data.train.length)}
-        </Note>
+        <Note className="flex-1">{tt.realNote(data.train.length)}</Note>
         <Note className="flex-1">{tt.realCnnNote}</Note>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { argmax, softmax } from '@/lib/softmax';
 import { fmt } from '@/lib/tensor';
 import type { Matrix } from '@/types';
 import { Button } from './ui/controls';
-import { Card, Formula, Tag } from './ui/display';
+import { Card, Formula } from './ui/display';
 
 const LIMIT = 15;
 const clampLogit = (z: number) => Math.max(-LIMIT, Math.min(LIMIT, Math.round(z * 10) / 10));
@@ -36,11 +36,9 @@ export function SoftmaxVisualizer() {
     <Card>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
         <div className="flex flex-wrap items-center gap-2">
-          {isEdited ? (
-            <Tag kind="illustrative">{t.softmax.edited}</Tag>
-          ) : (
-            <Tag kind="simulated">{t.softmax.fromModel}</Tag>
-          )}
+          <span className="text-xs text-ink-3">
+            {isEdited ? t.softmax.edited : t.softmax.fromModel}
+          </span>
         </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={() => setEdited(null)} disabled={!isEdited}>

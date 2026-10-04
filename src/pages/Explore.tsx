@@ -113,7 +113,6 @@ export function Explore() {
           id="input"
           number={1}
           title={t.chapters['input'].title}
-          tags={['computed']}
           lede={t.chapters['input'].lede}
         >
           <ImageInput />
@@ -123,7 +122,6 @@ export function Explore() {
           id="convolution"
           number={2}
           title={t.chapters['convolution'].title}
-          tags={['computed']}
           lede={t.chapters['convolution'].lede}
         >
           <ConvolutionVisualizer />
@@ -133,7 +131,6 @@ export function Explore() {
           id="feature-maps"
           number={3}
           title={t.chapters['feature-maps'].title}
-          tags={['computed']}
           lede={t.chapters['feature-maps'].lede}
         >
           <FeatureMapExplorer />
@@ -143,7 +140,6 @@ export function Explore() {
           id="relu"
           number={4}
           title={t.chapters['relu'].title}
-          tags={['computed']}
           lede={t.chapters['relu'].lede}
         >
           <ReLUVisualizer />
@@ -153,7 +149,6 @@ export function Explore() {
           id="pooling"
           number={5}
           title={t.chapters['pooling'].title}
-          tags={['computed']}
           lede={t.chapters['pooling'].lede}
         >
           <PoolingVisualizer />
@@ -163,7 +158,6 @@ export function Explore() {
           id="architecture"
           number={6}
           title={t.chapters['architecture'].title}
-          tags={['computed', 'simulated']}
           lede={t.chapters['architecture'].lede}
         >
           <CNNArchitecture />
@@ -173,7 +167,6 @@ export function Explore() {
           id="hierarchy"
           number={7}
           title={t.chapters['hierarchy'].title}
-          tags={['computed', 'illustrative']}
           lede={t.chapters['hierarchy'].lede}
         >
           <FeatureHierarchy />
@@ -183,7 +176,6 @@ export function Explore() {
           id="dense"
           number={8}
           title={t.chapters['dense'].title}
-          tags={['computed', 'simulated']}
           lede={t.chapters['dense'].lede}
         >
           <div className="flex flex-col gap-6">
@@ -196,7 +188,6 @@ export function Explore() {
           id="softmax"
           number={9}
           title={t.chapters['softmax'].title}
-          tags={['computed', 'simulated']}
           lede={t.chapters['softmax'].lede}
         >
           <SoftmaxVisualizer />
@@ -206,7 +197,6 @@ export function Explore() {
           id="experiments"
           number={10}
           title={t.chapters['experiments'].title}
-          tags={['computed']}
           lede={t.chapters['experiments'].lede}
         >
           <ExperimentPanel />
