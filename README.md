@@ -1,46 +1,40 @@
 # CNN Explainer
 
-A visual and interactive explanation of how Convolutional Neural Networks work.
+A visual, interactive explanation of how convolutional neural networks work.
 
-Follow a single image through every stage of a small CNN — convolution, activation, pooling, flatten, dense and softmax — and watch the real numbers change as you draw, upload, pick kernels and tweak hyper-parameters. Everything runs in the browser: no backend, no Python, no GPU.
+You pick an image and follow it through a small CNN: convolution, activation, pooling, flatten, a dense layer and softmax. The numbers on screen are computed live, so when you draw something new, swap a kernel or change the stride, every stage updates. It all runs in the browser.
 
 ![CNN Explainer home page](docs/screenshots/home.png)
 
 ## Demo
 
-**Live demo:** **[makifkaradag.github.io/cnn-explainer](https://makifkaradag.github.io/cnn-explainer/)**
+Live: [makifkaradag.github.io/cnn-explainer](https://makifkaradag.github.io/cnn-explainer/)
 
-| Convolution, step by step                                   | Playground (dark mode)                                  |
+The interface is available in English and Turkish. Use the EN/TR switch in the top right corner.
+
+| Convolution, step by step                                   | Playground in dark mode                                 |
 | ----------------------------------------------------------- | ------------------------------------------------------- |
 | ![Convolution visualizer](docs/screenshots/convolution.png) | ![CNN Playground](docs/screenshots/playground-dark.png) |
 
 ## Why this project?
 
-Most CNN explanations are either a wall of equations or a diagram with arrows. This project sits in between: every concept is a small interactive instrument wired to a **real implementation** of the operation, so you can see _why_ the output looks the way it does.
+Most introductions to CNNs give you either the equations or a diagram of boxes and arrows. I wanted something you can poke at. Each concept here is a small tool connected to a real implementation of the operation, so you can see why a feature map looks the way it does instead of taking it on faith.
 
-It is also careful about honesty. Each visual is labelled as one of:
-
-- **Real computation** — produced by the math implemented in `src/lib`, live on your image.
-- **Simplified simulation** — real math on a deliberately tiny network.
-- **Illustrative** — a conceptual picture, not computed by a trained model.
+The app also tries not to overclaim. Every visual has a label saying whether it shows real computation, real math on a deliberately tiny network, or an illustration drawn to build intuition.
 
 ## Features
 
-- **Your own input** — pick one of 7 built-in examples, draw on a 28×28 canvas, or upload an image (converted to grayscale in the browser). Hover any pixel to read its value.
-- **Animated convolution** — the kernel slides over the image while every multiplication, the sum, the bias and the resulting output pixel are shown. Change kernel size, stride, padding, preset or edit individual weights.
-- **Feature maps** — one input through four filters, side by side.
-- **ReLU** — before/after maps, a function plot that tracks the inspected value, keyboard navigation.
-- **Pooling** — max vs. average, window size and stride, animated window and live output-size formula.
-- **Clickable architecture** — every layer shows what enters, what it does, what comes out, shapes and parameter counts.
-- **Feature hierarchy** — real layer-1/2 maps plus clearly labelled illustrations of deeper layers, with a growing receptive field.
-- **Flatten & Dense** — animated flattening and a fully connected layer drawn with a representative subset of weights; hover a neuron to see how its logit adds up over all 400 inputs.
-- **Softmax** — drag logits and watch exponentials and probabilities respond.
-- **"What happens if…?"** — kernel, stride, padding, activation (ReLU / Leaky ReLU / Sigmoid / Tanh), pooling type and size, and number of filters, all updating instantly.
-- **CNN Playground** — run the full network step-by-step or in auto-play.
-- **Training** — genuine mini-batch gradient descent with an animated forward → loss → backprop → update loop, loss/accuracy curves and weights changing in real time.
-- **Under the hood** — formulas with worked examples computed by the same code, plus a visual glossary.
-- English and Turkish interface with a language switch (follows the browser language on first visit).
-- Light/dark mode, responsive layout, reduced-motion support.
+The Explore page has ten chapters that build on each other. You start by choosing an input: one of seven built-in examples, a 28×28 drawing of your own, or an uploaded image that gets converted to grayscale in the browser. Hovering a pixel shows its value.
+
+In the convolution chapter the kernel slides across the image while the panel shows each multiplication, the sum, the bias and the output pixel it produces. You can change kernel size, stride and padding, pick a preset or type your own weights. The following chapters cover feature maps from four different filters, ReLU with a plot that follows the value you inspect, and max/average pooling with an animated window.
+
+After that comes the full network. Click any layer in the architecture diagram to see its input, its output, the shapes and the parameter count. The hierarchy chapter shows real layer 1 and 2 outputs next to labelled illustrations of what deeper layers tend to pick up. The dense layer is drawn with a subset of its connections, and hovering a neuron breaks its logit down over all 400 inputs. In the softmax chapter you can drag the logits and watch the probabilities follow.
+
+The last chapter lets you change kernel, stride, padding, activation (ReLU, Leaky ReLU, sigmoid, tanh), pooling and the number of filters at once and see the result immediately.
+
+There are three more pages. The Playground runs the whole network stage by stage or on auto-play. The Training page runs actual gradient descent and animates the forward pass, loss, backpropagation and weight update. Under the hood collects the formulas with worked examples and a short visual glossary.
+
+Light and dark themes, mobile layouts and reduced-motion settings are supported.
 
 ## CNN pipeline
 
@@ -57,28 +51,28 @@ flowchart LR
     I --> J["Softmax<br/>4 probabilities"]
 ```
 
-| Layer       | Output shape | Parameters | Notes                              |
-| ----------- | ------------ | ---------: | ---------------------------------- |
-| Input       | 28×28×1      |          0 | grayscale, values in [0, 1]        |
-| Conv2D 3×3  | 26×26×8      |         80 | hand-designed edge filters         |
-| ReLU        | 26×26×8      |          0 |                                    |
-| MaxPool 2×2 | 13×13×8      |          0 |                                    |
-| Conv2D 3×3  | 11×11×16     |      1,168 | random (seeded), frozen            |
-| ReLU        | 11×11×16     |          0 |                                    |
-| MaxPool 2×2 | 5×5×16       |          0 | last row/column dropped            |
-| Flatten     | 400          |          0 |                                    |
-| Dense       | 4            |      1,604 | trained in the browser             |
-| Softmax     | 4            |          0 | Circle · Square · Triangle · Cross |
+| Layer       | Output shape | Parameters | Notes                                 |
+| ----------- | ------------ | ---------: | ------------------------------------- |
+| Input       | 28×28×1      |          0 | grayscale, values in [0, 1]           |
+| Conv2D 3×3  | 26×26×8      |         80 | hand-picked edge filters              |
+| ReLU        | 26×26×8      |          0 |                                       |
+| MaxPool 2×2 | 13×13×8      |          0 |                                       |
+| Conv2D 3×3  | 11×11×16     |      1,168 | random with a fixed seed, not trained |
+| ReLU        | 11×11×16     |          0 |                                       |
+| MaxPool 2×2 | 5×5×16       |          0 | last row and column are dropped       |
+| Flatten     | 400          |          0 |                                       |
+| Dense       | 4            |      1,604 | trained in the browser                |
+| Softmax     | 4            |          0 | circle, square, triangle, cross       |
 
 ## Interactive convolution
 
-The kernel window, the corresponding weights, all `k×k` products, their sum, the bias and the output pixel are shown for every position. Click the input to move the kernel, click the output to jump to any position, or press play (four speeds). Zero padding is drawn as hatched cells.
+For every kernel position you see the window on the input, the weights, all k×k products, their sum and the resulting output pixel. Click the input to move the kernel there or click a cell of the output to jump to it. Playback has four speeds. Zero padding is drawn as hatched cells.
 
 ## Feature maps
 
 ![Feature maps](docs/screenshots/feature-maps.png)
 
-Different kernels respond to different patterns. The app is explicit that these are textbook kernels picked for readability — trained CNNs **learn** their filters through backpropagation and many learned filters have no simple description.
+Each kernel lights up a different pattern. These are textbook kernels chosen because their output is easy to read. A trained CNN learns its own filters through backpropagation, and many of them have no simple description, which the app says plainly.
 
 ## ReLU
 
@@ -96,33 +90,28 @@ Different kernels respond to different patterns. The app is explicit that these 
 
 ![Training](docs/screenshots/training-dark.png)
 
-The training page runs **real** mini-batch gradient descent on softmax cross-entropy — loss, accuracy and weight updates are not faked. To keep it instant, only the final Dense layer is trained (the convolutional filters are frozen) on 96 synthetic shape drawings, and evaluated on 32 unseen ones.
+The loss, accuracy and weight changes on this page come from real mini-batch gradient descent on softmax cross-entropy. To keep it fast, only the final dense layer is trained. The convolutional filters stay frozen, the training set is 96 synthetic drawings and accuracy is checked on 32 drawings the model has not seen.
 
 ## Mathematical foundations
 
-| Operation                       | Formula                                                                        |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| Convolution (cross-correlation) | `y(i,j) = Σₘ Σₙ x(i·s + m − p, j·s + n − p) · K(m,n) + b`                      |
-| Output size                     | `⌊(n + 2p − k) / s⌋ + 1`                                                       |
-| ReLU                            | `f(x) = max(0, x)`                                                             |
-| Max pooling                     | `MaxPool(X) = max over window of Xᵢⱼ`                                          |
-| Softmax                         | `softmax(zᵢ) = exp(zᵢ) / Σⱼ exp(zⱼ)` (computed with the max-subtraction trick) |
-| Cross-entropy                   | `L = −log p(correct class)`; gradient w.r.t. logits is `p − y`                 |
+| Operation                       | Formula                                                                    |
+| ------------------------------- | -------------------------------------------------------------------------- |
+| Convolution (cross-correlation) | `y(i,j) = Σₘ Σₙ x(i·s + m − p, j·s + n − p) · K(m,n) + b`                  |
+| Output size                     | `⌊(n + 2p − k) / s⌋ + 1`                                                   |
+| ReLU                            | `f(x) = max(0, x)`                                                         |
+| Max pooling                     | `MaxPool(X) = max over window of Xᵢⱼ`                                      |
+| Softmax                         | `softmax(zᵢ) = exp(zᵢ) / Σⱼ exp(zⱼ)`, with max(z) subtracted first         |
+| Cross-entropy                   | `L = −log p(correct class)`, and its gradient w.r.t. the logits is `p − y` |
 
-All of these live in [`src/lib`](src/lib) as plain, framework-free TypeScript and are covered by unit tests ([`math.test.ts`](src/lib/math.test.ts), [`network.test.ts`](src/lib/network.test.ts)).
+These are implemented in [`src/lib`](src/lib) as plain TypeScript with no framework code, and the unit tests in [`math.test.ts`](src/lib/math.test.ts) and [`network.test.ts`](src/lib/network.test.ts) check them against hand-computed results.
 
 ## Tech stack
 
-- [React 19](https://react.dev) + [TypeScript](https://www.typescriptlang.org) (strict)
-- [Vite](https://vite.dev)
-- [Tailwind CSS v4](https://tailwindcss.com)
-- [Motion](https://motion.dev) for animation
-- Canvas + SVG for all visualisations (no chart library)
-- [Vitest](https://vitest.dev), ESLint, Prettier
+React 19 and TypeScript in strict mode, built with Vite. Styling is Tailwind CSS v4 and animation uses [Motion](https://motion.dev). The visualisations are drawn with canvas and SVG directly, without a chart library. Tests run on Vitest, and the code is checked with ESLint and formatted with Prettier.
 
 ## Installation
 
-Requires Node.js 20.19+ or 22+.
+You need Node.js 20.19 or newer.
 
 ```bash
 git clone https://github.com/Makifkaradag/cnn-explainer.git
@@ -133,70 +122,71 @@ npm install
 ## Usage
 
 ```bash
-npm run dev          # start the dev server at http://localhost:5173
+npm run dev          # dev server at http://localhost:5173
 npm run build        # type-check and build to dist/
 npm run preview      # serve the production build
-npm test             # run the unit tests
+npm test             # unit tests
 npm run lint         # ESLint
 npm run format       # Prettier
 ```
 
 ### Deployment
 
-The build is fully static and uses relative asset paths plus hash routing, so `dist/` works on any static host.
+The build is static, uses relative asset paths and hash routing, so the `dist/` folder works on any static host.
 
-For **GitHub Pages**, push to `main` and enable _Settings → Pages → Source: GitHub Actions_. The included workflow ([`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)) lints, tests, builds and deploys. If you fork the project, update `REPO_URL` in [`src/config.ts`](src/config.ts).
+This repository deploys to GitHub Pages through [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml). Every push to `main` is linted, tested, built and published. If you fork it, enable Settings → Pages → Source: GitHub Actions and change `REPO_URL` in [`src/config.ts`](src/config.ts).
 
 ## Project structure
 
 ```
 src/
 ├── components/
-│   ├── layout/              # Layout (header, language switch, footer), Chapter wrapper
-│   ├── ui/                  # Buttons, segmented controls, tags, icons, playback controls
-│   ├── PixelGrid.tsx        # Canvas renderer for any matrix (hover, click, highlights)
-│   ├── ImageInput.tsx       # Examples, DrawPad, upload, pixel inspector
+│   ├── layout/              # header with language switch, footer, chapter wrapper
+│   ├── ui/                  # buttons, segmented controls, tags, icons, playback controls
+│   ├── PixelGrid.tsx        # canvas renderer for any matrix, with hover and highlights
+│   ├── ImageInput.tsx       # examples, drawing pad, upload, pixel inspector
 │   ├── ConvolutionVisualizer.tsx
 │   ├── KernelEditor.tsx
-│   ├── FeatureMap.tsx / FeatureMapExplorer.tsx
-│   ├── ReLUVisualizer.tsx / ActivationVisualizer.tsx
+│   ├── FeatureMap.tsx, FeatureMapExplorer.tsx
+│   ├── ReLUVisualizer.tsx, ActivationVisualizer.tsx
 │   ├── PoolingVisualizer.tsx
-│   ├── CNNArchitecture.tsx / FeatureHierarchy.tsx
-│   ├── FlattenVisualizer.tsx / DenseVisualizer.tsx
-│   ├── SoftmaxVisualizer.tsx / ExperimentPanel.tsx
-│   ├── TrainingSimulator.tsx / LineChart.tsx
+│   ├── CNNArchitecture.tsx, FeatureHierarchy.tsx
+│   ├── FlattenVisualizer.tsx, DenseVisualizer.tsx
+│   ├── SoftmaxVisualizer.tsx, ExperimentPanel.tsx
+│   ├── TrainingSimulator.tsx, LineChart.tsx
 │   └── PipelineHero.tsx
 ├── pages/                   # Home, Explore, Playground, Training, Concepts
-├── lib/                     # Framework-free math and simulation
-│   ├── convolution.ts       # convolve2d, conv2d, convolutionStep, output sizes
-│   ├── pooling.ts           # max / average pooling
+├── lib/                     # math and simulation, no React
+│   ├── convolution.ts       # convolve2d, conv2d, single-step breakdown, output sizes
+│   ├── pooling.ts           # max and average pooling
 │   ├── activations.ts       # ReLU, Leaky ReLU, sigmoid, tanh
 │   ├── softmax.ts           # stable softmax, cross-entropy
 │   ├── network.ts           # the tiny CNN: weights, forward pass, layer specs
-│   ├── training.ts          # synthetic dataset, gradient descent for the Dense layer
-│   ├── raster.ts            # anti-aliased shape rasteriser for examples and data
+│   ├── training.ts          # synthetic dataset and gradient descent for the dense layer
+│   ├── raster.ts            # draws the example shapes and training data
 │   └── image.ts, colors.ts, tensor.ts, random.ts, views.ts
-├── data/                    # Example images, kernel presets, chapter list
-├── context/                 # Shared input image and theme
-├── i18n/                    # en.ts / tr.ts dictionaries (typed), language context
-├── hooks/                   # useStepper (animation), useForward (memoised forward pass)
+├── i18n/                    # typed English and Turkish dictionaries, language context
+├── data/                    # example images, kernel presets, chapter order
+├── context/                 # shared input image and theme
+├── hooks/                   # useStepper for animations, useForward for the forward pass
 └── types/
 ```
 
 ## Educational limitations
 
-- The network is tiny (2,852 parameters), works on 28×28 grayscale images and knows only 4 synthetic classes. Anything else — a smiley, a digit, a photo — is still forced into one of them.
-- First-layer filters are hand-designed and second-layer filters are random. Only the Dense layer is trained. Real CNNs learn **all** weights from data with backpropagation.
-- Production CNNs are far deeper and wider and use additional components (batch normalisation, residual connections, data augmentation, …).
-- The feature-hierarchy chapter mixes real maps (layers 1–2) with illustrations (layers 3–4). It conveys an intuition seen in many trained networks, not a guarantee.
+The network is tiny. It has 2,852 parameters, takes 28×28 grayscale images and knows four synthetic classes. Give it a smiley or a photo and it will still pick one of those four.
+
+Its first-layer filters were chosen by hand and the second layer is random, so only the dense layer is learned. A real CNN learns every weight from data, is much deeper and wider, and usually adds things like batch normalisation, residual connections and data augmentation.
+
+The feature hierarchy chapter mixes real outputs for layers 1 and 2 with drawings for layers 3 and 4. It shows a pattern often seen in trained networks, not something every network is guaranteed to learn.
 
 ## Future improvements
 
-- Train the convolutional layers too (full backpropagation through conv and pooling) in a Web Worker.
-- Load a small pretrained MNIST model and compare its learned filters with the hand-designed ones.
-- RGB input with per-channel visualisation.
-- Saliency maps / Grad-CAM to show which pixels drove a prediction.
-- Shareable URLs that encode the current drawing and settings.
+- Train the convolutional layers as well, with full backpropagation running in a Web Worker.
+- Load a small pretrained MNIST model and compare its learned filters with the hand-picked ones.
+- Support RGB input and show each channel.
+- Add saliency maps or Grad-CAM to show which pixels drove a prediction.
+- Encode the current drawing and settings in the URL so a state can be shared.
 
 ## License
 
