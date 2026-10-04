@@ -39,6 +39,7 @@ It is also careful about honesty. Each visual is labelled as one of:
 - **CNN Playground** — run the full network step-by-step or in auto-play.
 - **Training** — genuine mini-batch gradient descent with an animated forward → loss → backprop → update loop, loss/accuracy curves and weights changing in real time.
 - **Under the hood** — formulas with worked examples computed by the same code, plus a visual glossary.
+- English and Turkish interface with a language switch (follows the browser language on first visit).
 - Light/dark mode, responsive layout, reduced-motion support.
 
 ## CNN pipeline
@@ -151,7 +152,7 @@ For **GitHub Pages**, push to `main` and enable _Settings → Pages → Source: 
 ```
 src/
 ├── components/
-│   ├── layout/              # Layout (header, footer), Chapter section wrapper
+│   ├── layout/              # Layout (header, language switch, footer), Chapter wrapper
 │   ├── ui/                  # Buttons, segmented controls, tags, icons, playback controls
 │   ├── PixelGrid.tsx        # Canvas renderer for any matrix (hover, click, highlights)
 │   ├── ImageInput.tsx       # Examples, DrawPad, upload, pixel inspector
@@ -177,6 +178,7 @@ src/
 │   └── image.ts, colors.ts, tensor.ts, random.ts, views.ts
 ├── data/                    # Example images, kernel presets, chapter list
 ├── context/                 # Shared input image and theme
+├── i18n/                    # en.ts / tr.ts dictionaries (typed), language context
 ├── hooks/                   # useStepper (animation), useForward (memoised forward pass)
 └── types/
 ```

@@ -14,6 +14,7 @@ import { useImage } from '@/context/image';
 import { KERNEL_PRESETS, type KernelPresetId, makeKernel } from '@/data/kernels';
 import { useForward } from '@/hooks/useNetwork';
 import { useStepper } from '@/hooks/useStepper';
+import { sourceLabel, useT } from '@/i18n/context';
 import { ACTIVATION_NAMES, ACTIVATIONS } from '@/lib/activations';
 import { cx } from '@/lib/cx';
 import { CLASS_NAMES, type ForwardResult } from '@/lib/network';
@@ -22,70 +23,18 @@ import { formatShape } from '@/lib/tensor';
 import { wrapVector } from '@/lib/views';
 import type { ActivationName, PoolMode, Tensor3 } from '@/types';
 
-interface StageDef {
-  title: string;
-  shape: number[];
-  explain: string;
-}
-
-function stages(activation: string, pool: string): StageDef[] {
-  return [
-    {
-      title: 'Input',
-      shape: [28, 28, 1],
-      explain: 'The grayscale image: 784 numbers between 0 and 1.',
-    },
-    {
-      title: 'Convolution',
-      shape: [26, 26, 8],
-      explain:
-        'Eight 3×3 filters slide over the image. Filter #1 is the kernel you picked; the other seven are fixed edge filters.',
-    },
-    {
-      title: activation,
-      shape: [26, 26, 8],
-      explain: `${activation} is applied to every value of every feature map. The shape does not change.`,
-    },
-    {
-      title: `${pool} pool`,
-      shape: [13, 13, 8],
-      explain: 'Each 2×2 block is reduced to one value, halving width and height.',
-    },
-    {
-      title: 'Convolution 2',
-      shape: [11, 11, 16],
-      explain:
-        'Sixteen filters, each spanning all 8 input maps (3×3×8 weights), combine the first-layer features.',
-    },
-    {
-      title: `${activation} 2`,
-      shape: [11, 11, 16],
-      explain: 'The same activation again, element-wise.',
-    },
-    {
-      title: `${pool} pool 2`,
-      shape: [5, 5, 16],
-      explain:
-        '11×11 → 5×5. The last row and column do not fill a complete window and are dropped.',
-    },
-    {
-      title: 'Flatten',
-      shape: [400],
-      explain: 'The 16 maps of 5×5 are unrolled into a single vector of 400 numbers.',
-    },
-    {
-      title: 'Dense',
-      shape: [4],
-      explain:
-        'Four neurons, one per class. Each is a weighted sum of all 400 inputs plus a bias: the logits.',
-    },
-    {
-      title: 'Prediction',
-      shape: [4],
-      explain: 'Softmax turns the logits into probabilities that sum to 1.',
-    },
-  ];
-}
+const STAGE_SHAPES = [
+  [28, 28, 1],
+  [26, 26, 8],
+  [26, 26, 8],
+  [13, 13, 8],
+  [11, 11, 16],
+  [11, 11, 16],
+  [5, 5, 16],
+  [400],
+  [4],
+  [4],
+];
 
 function mapsOf(r: ForwardResult, stage: number): Tensor3 | null {
   return [null, r.conv1, r.act1, r.pool1, r.conv2, r.act2, r.pool2][stage] ?? null;
@@ -100,6 +49,7 @@ function StageVisual({
   stage: number;
   compact?: boolean;
 }) {
+  const t = useT();
   const maps = mapsOf(r, stage);
   if (stage === 0) return <PixelGrid data={r.input} scale="gray" cellSize={compact ? 1.6 : 10} />;
   if (maps) {
@@ -111,7 +61,9 @@ function StageVisual({
         cellSize={cell}
         limit={compact ? 1 : 16}
         showOverflow={!compact}
-        labels={(i) => (compact ? null : stage <= 3 && i === 0 ? 'your filter' : `#${i + 1}`)}
+        labels={(i) =>
+          compact ? null : stage <= 3 && i === 0 ? t.playground.yourFilter : `#${i + 1}`
+        }
       />
     );
   }
@@ -120,17 +72,19 @@ function StageVisual({
     return compact ? (
       <div className="font-mono text-[10px] text-ink-3">z</div>
     ) : (
-      <Bars labels={CLASS_NAMES} values={r.logits} kind="signed" />
+      <Bars labels={t.classes} values={r.logits} kind="signed" />
     );
   return compact ? (
-    <div className="text-[10px] font-medium">{CLASS_NAMES[argmax(r.probs)]}</div>
+    <div className="text-[10px] font-medium">{t.classes[argmax(r.probs)]}</div>
   ) : (
-    <Bars labels={CLASS_NAMES} values={r.probs} highlight={argmax(r.probs)} />
+    <Bars labels={t.classes} values={r.probs} highlight={argmax(r.probs)} />
   );
 }
 
 export function Playground() {
   const { image, source, setImage } = useImage();
+  const t = useT();
+  const tp = t.playground;
   const [inputMode, setInputMode] = useState<'examples' | 'draw'>('examples');
   const [kernelId, setKernelId] = useState<KernelPresetId>('vertical');
   const [activation, setActivation] = useState<ActivationName>('relu');
@@ -139,7 +93,9 @@ export function Playground() {
 
   const customKernel = useMemo(() => makeKernel(kernelId, 3), [kernelId]);
   const r = useForward({ activation, poolMode, customKernel });
-  const defs = stages(ACTIVATIONS[activation].label, poolMode === 'max' ? 'Max' : 'Avg');
+  const defs = tp
+    .stages(ACTIVATIONS[activation].label, poolMode === 'max' ? t.common.max : t.common.average)
+    .map((d, i) => ({ ...d, shape: STAGE_SHAPES[i] }));
   const run = useStepper(defs.length, 0.9);
   const shown = viewStage != null && viewStage <= run.index ? viewStage : run.index;
   const def = defs[shown];
@@ -150,30 +106,28 @@ export function Playground() {
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
       <header className="mb-8 flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="font-mono text-xs text-ink-3">Playground</span>
+          <span className="font-mono text-xs text-ink-3">{tp.eyebrow}</span>
           <Tag kind="computed" />
           <Tag kind="simulated" />
         </div>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">CNN Playground</h1>
-        <p className="max-w-2xl font-serif text-lg leading-relaxed text-ink-2">
-          Configure the first layer, then push your image through the network one stage at a time.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{tp.title}</h1>
+        <p className="max-w-2xl font-serif text-lg leading-relaxed text-ink-2">{tp.intro}</p>
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
         <div className="flex flex-col gap-4">
           <Card
-            title="1 · Image"
-            aside={<span className="truncate text-xs text-ink-3">{source.label}</span>}
+            title={tp.imageCard}
+            aside={<span className="truncate text-xs text-ink-3">{sourceLabel(source, t)}</span>}
           >
             <div className="flex flex-col gap-3 p-4">
               <Segmented
-                aria-label="Input source"
+                aria-label={t.input.sourceLabel}
                 value={inputMode}
                 onChange={setInputMode}
                 options={[
-                  { value: 'examples', label: 'Examples' },
-                  { value: 'draw', label: 'Draw' },
+                  { value: 'examples', label: t.common.examples },
+                  { value: 'draw', label: t.common.draw },
                 ]}
               />
               {inputMode === 'examples' ? (
@@ -181,41 +135,41 @@ export function Playground() {
               ) : (
                 <DrawPad
                   initial={source.kind === 'drawing' ? image : undefined}
-                  onCommit={(m) => setImage(m, { kind: 'drawing', label: 'Your drawing' })}
+                  onCommit={(m) => setImage(m, { kind: 'drawing', label: t.common.yourDrawing })}
                 />
               )}
             </div>
           </Card>
-          <Card title="2 · Layer settings">
+          <Card title={tp.settingsCard}>
             <div className="flex flex-col gap-4 p-4">
-              <Field label="Kernel for filter #1">
+              <Field label={tp.kernelFor1}>
                 <Select<KernelPresetId>
-                  aria-label="Kernel"
+                  aria-label={t.common.kernel}
                   value={kernelId}
                   onChange={setKernelId}
-                  options={KERNEL_PRESETS.map((p) => ({ value: p.id, label: p.label }))}
+                  options={KERNEL_PRESETS.map((id) => ({ value: id, label: t.kernels[id] }))}
                 />
               </Field>
               <div className="w-32">
                 <KernelEditor kernel={customKernel} readOnly />
               </div>
-              <Field label="Activation">
+              <Field label={t.common.activation}>
                 <Select<ActivationName>
-                  aria-label="Activation"
+                  aria-label={t.common.activation}
                   value={activation}
                   onChange={setActivation}
                   options={ACTIVATION_NAMES.map((n) => ({ value: n, label: ACTIVATIONS[n].label }))}
                 />
               </Field>
               <ActivationPlot name={activation} showLabel={false} className="max-w-[220px]" />
-              <Field label="Pooling">
+              <Field label={t.common.pooling}>
                 <Segmented
-                  aria-label="Pooling"
+                  aria-label={t.common.pooling}
                   value={poolMode}
                   onChange={setPoolMode}
                   options={[
-                    { value: 'max', label: 'Max' },
-                    { value: 'avg', label: 'Average' },
+                    { value: 'max', label: t.common.max },
+                    { value: 'avg', label: t.common.average },
                   ]}
                 />
               </Field>
@@ -235,7 +189,7 @@ export function Playground() {
                   run.step(1);
                 }}
               >
-                Run step-by-step
+                {tp.run}
               </Button>
               <Button
                 icon={run.playing ? <PauseIcon /> : <PlayIcon />}
@@ -244,7 +198,7 @@ export function Playground() {
                   run.toggle();
                 }}
               >
-                {run.playing ? 'Pause' : 'Auto play'}
+                {run.playing ? t.common.pause : tp.auto}
               </Button>
               <Button
                 variant="ghost"
@@ -254,10 +208,10 @@ export function Playground() {
                   run.reset();
                 }}
               >
-                Reset
+                {t.common.reset}
               </Button>
               <span className="ml-auto font-mono text-xs text-ink-3">
-                stage {run.index + 1} / {defs.length}
+                {tp.stage(run.index + 1, defs.length)}
               </span>
             </div>
 
@@ -306,7 +260,7 @@ export function Playground() {
                   <ShapeChip shape={def.shape} />
                   {shown > 0 && (
                     <span className="text-xs text-ink-3">
-                      from {formatShape(defs[shown - 1].shape)}
+                      {tp.from(formatShape(defs[shown - 1].shape))}
                     </span>
                   )}
                 </div>
@@ -317,24 +271,15 @@ export function Playground() {
                 {shown === defs.length - 1 && (
                   <div className="flex flex-col gap-3">
                     <div className="text-sm">
-                      Predicted:{' '}
-                      <span className="font-semibold">{CLASS_NAMES[argmax(r.probs)]}</span>{' '}
+                      {tp.predicted}{' '}
+                      <span className="font-semibold">{t.classes[argmax(r.probs)]}</span>{' '}
                       <span className="font-mono text-ink-3">
                         ({(Math.max(...r.probs) * 100).toFixed(1)}%)
                       </span>
                     </div>
-                    {nonDefault && (
-                      <Note>
-                        You changed the first layer. The Dense layer was trained on features from
-                        the default settings (vertical edge kernel, ReLU, max pooling), so it now
-                        sees inputs it was never trained on and the prediction may get worse. A real
-                        network would be retrained after such a change.
-                      </Note>
-                    )}
+                    {nonDefault && <Note>{tp.changedNote}</Note>}
                     <p className="text-xs leading-relaxed text-ink-3">
-                      This prediction comes from a tiny simulated CNN that only knows{' '}
-                      {CLASS_NAMES.length} synthetic shape classes — anything else (like a smiley)
-                      is still forced into one of them.
+                      {tp.tinyNote(CLASS_NAMES.length)}
                     </p>
                   </div>
                 )}

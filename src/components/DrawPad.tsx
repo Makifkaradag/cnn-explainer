@@ -1,4 +1,5 @@
 import { type PointerEvent, useRef, useState } from 'react';
+import { useT } from '@/i18n/context';
 import { cloneMatrix, zeros } from '@/lib/tensor';
 import type { Matrix } from '@/types';
 import { Button, Segmented } from './ui/controls';
@@ -31,6 +32,7 @@ interface DrawPadProps {
 
 /** A 28×28 drawing surface. Each finished stroke is committed as the new input image. */
 export function DrawPad({ initial, onCommit }: DrawPadProps) {
+  const t = useT();
   const [image, setImage] = useState<Matrix>(() =>
     initial ? cloneMatrix(initial) : zeros(SIZE, SIZE),
   );
@@ -98,11 +100,11 @@ export function DrawPad({ initial, onCommit }: DrawPadProps) {
         onPointerUp={end}
         onPointerCancel={end}
       >
-        <PixelGrid data={image} scale="gray" cellSize={10} label="Drawing canvas" />
+        <PixelGrid data={image} scale="gray" cellSize={10} label={t.draw.canvas} />
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Segmented
-          aria-label="Drawing tool"
+          aria-label={t.draw.tool}
           value={tool}
           onChange={setTool}
           options={[
@@ -110,7 +112,7 @@ export function DrawPad({ initial, onCommit }: DrawPadProps) {
               value: 'brush',
               label: (
                 <span className="flex items-center gap-1">
-                  <PencilIcon /> Brush
+                  <PencilIcon /> {t.draw.brush}
                 </span>
               ),
             },
@@ -118,29 +120,27 @@ export function DrawPad({ initial, onCommit }: DrawPadProps) {
               value: 'eraser',
               label: (
                 <span className="flex items-center gap-1">
-                  <EraserIcon /> Eraser
+                  <EraserIcon /> {t.draw.eraser}
                 </span>
               ),
             },
           ]}
         />
         <Segmented
-          aria-label="Brush size"
+          aria-label={t.draw.size}
           value={brush}
           onChange={setBrush}
           options={[
-            { value: 0.9, label: 'Thin' },
-            { value: 1.3, label: 'Medium' },
-            { value: 2, label: 'Thick' },
+            { value: 0.9, label: t.draw.sizes[0] },
+            { value: 1.3, label: t.draw.sizes[1] },
+            { value: 2, label: t.draw.sizes[2] },
           ]}
         />
         <Button size="sm" onClick={clear} icon={<ResetIcon />}>
-          Clear
+          {t.draw.clear}
         </Button>
       </div>
-      <p className="text-xs text-ink-3">
-        Draw a circle, square, triangle or cross — the tiny model only knows these four.
-      </p>
+      <p className="text-xs text-ink-3">{t.draw.hint}</p>
     </div>
   );
 }

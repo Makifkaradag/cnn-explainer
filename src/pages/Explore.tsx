@@ -17,10 +17,11 @@ import { ButtonLink } from '@/components/ui/controls';
 import { ArrowRightIcon } from '@/components/ui/Icons';
 import { useImage } from '@/context/image';
 import { CHAPTERS } from '@/data/chapters';
+import { sourceLabel, useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 
 function useActiveChapter() {
-  const [active, setActive] = useState<string>(CHAPTERS[0].id);
+  const [active, setActive] = useState<string>(CHAPTERS[0]);
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -31,8 +32,8 @@ function useActiveChapter() {
       },
       { rootMargin: '-20% 0px -70% 0px' },
     );
-    CHAPTERS.forEach((c) => {
-      const el = document.getElementById(c.id);
+    CHAPTERS.forEach((id) => {
+      const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
@@ -45,37 +46,38 @@ const scrollTo = (id: string) =>
 
 function Sidebar({ active }: { active: string }) {
   const { image, source } = useImage();
+  const t = useT();
   return (
     <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] w-56 shrink-0 flex-col gap-6 overflow-y-auto xl:flex">
       <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5">
         <PixelGrid data={image} scale="gray" cellSize={1.6} className="ring-0" />
         <div className="min-w-0 text-xs">
-          <div className="text-ink-3">Current input</div>
-          <div className="truncate font-medium">{source.label}</div>
+          <div className="text-ink-3">{t.explore.currentInput}</div>
+          <div className="truncate font-medium">{sourceLabel(source, t)}</div>
           <button
             type="button"
             onClick={() => scrollTo('input')}
             className="cursor-pointer text-accent hover:underline"
           >
-            change
+            {t.explore.change}
           </button>
         </div>
       </div>
-      <nav className="flex flex-col gap-0.5" aria-label="Chapters">
-        {CHAPTERS.map((c, i) => (
+      <nav className="flex flex-col gap-0.5" aria-label={t.explore.chaptersNav}>
+        {CHAPTERS.map((id, i) => (
           <button
-            key={c.id}
+            key={id}
             type="button"
-            onClick={() => scrollTo(c.id)}
+            onClick={() => scrollTo(id)}
             className={cx(
               'flex cursor-pointer items-baseline gap-2.5 rounded-md px-2 py-1.5 text-left text-[13px] transition',
-              active === c.id ? 'bg-surface-2 font-medium text-ink' : 'text-ink-3 hover:text-ink',
+              active === id ? 'bg-surface-2 font-medium text-ink' : 'text-ink-3 hover:text-ink',
             )}
           >
             <span className="font-mono text-[10px] opacity-70">
               {String(i + 1).padStart(2, '0')}
             </span>
-            {c.title}
+            {t.chapters[id].title}
           </button>
         ))}
       </nav>
@@ -85,6 +87,7 @@ function Sidebar({ active }: { active: string }) {
 
 export function Explore() {
   const active = useActiveChapter();
+  const t = useT();
   const [params] = useSearchParams();
   const target = params.get('c');
 
@@ -99,22 +102,19 @@ export function Explore() {
       <Sidebar active={active} />
       <div className="flex min-w-0 flex-1 flex-col gap-24">
         <header className="flex flex-col gap-3">
-          <div className="font-mono text-xs text-ink-3">Explore</div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-            Inside a Convolutional Neural Network
-          </h1>
+          <div className="font-mono text-xs text-ink-3">{t.explore.eyebrow}</div>
+          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{t.explore.title}</h1>
           <p className="max-w-2xl font-serif text-lg leading-relaxed text-ink-2">
-            Follow one image through every stage of a small CNN. Every visual below is computed live
-            from the image you choose — change it, and everything updates.
+            {t.explore.intro}
           </p>
         </header>
 
         <Chapter
           id="input"
           number={1}
-          title="The input image"
+          title={t.chapters['input'].title}
           tags={['computed']}
-          lede="To a computer, a grayscale image is just a grid of numbers. Ours is 28×28 = 784 brightness values between 0 (black) and 1 (white)."
+          lede={t.chapters['input'].lede}
         >
           <ImageInput />
         </Chapter>
@@ -122,9 +122,9 @@ export function Explore() {
         <Chapter
           id="convolution"
           number={2}
-          title="Convolution"
+          title={t.chapters['convolution'].title}
           tags={['computed']}
-          lede="A small grid of weights — the kernel — slides across the image. At each position it multiplies the pixels under it by its weights and adds everything up. That single number becomes one pixel of the output."
+          lede={t.chapters['convolution'].lede}
         >
           <ConvolutionVisualizer />
         </Chapter>
@@ -132,9 +132,9 @@ export function Explore() {
         <Chapter
           id="feature-maps"
           number={3}
-          title="Feature maps"
+          title={t.chapters['feature-maps'].title}
           tags={['computed']}
-          lede="The output of a convolution is called a feature map: bright where the kernel's pattern appears in the image. A layer uses many kernels at once, so it produces a stack of feature maps."
+          lede={t.chapters['feature-maps'].lede}
         >
           <FeatureMapExplorer />
         </Chapter>
@@ -142,9 +142,9 @@ export function Explore() {
         <Chapter
           id="relu"
           number={4}
-          title="ReLU activation"
+          title={t.chapters['relu'].title}
           tags={['computed']}
-          lede="After convolution, an activation function is applied to every value. ReLU is the most common: negative values become 0, positive values pass through. This non-linearity is what lets stacked layers learn more than a single linear filter could."
+          lede={t.chapters['relu'].lede}
         >
           <ReLUVisualizer />
         </Chapter>
@@ -152,9 +152,9 @@ export function Explore() {
         <Chapter
           id="pooling"
           number={5}
-          title="Pooling"
+          title={t.chapters['pooling'].title}
           tags={['computed']}
-          lede="Pooling shrinks a feature map by summarising small windows. Max pooling keeps the strongest response in each window, so the next layer works on fewer numbers and becomes less sensitive to small shifts."
+          lede={t.chapters['pooling'].lede}
         >
           <PoolingVisualizer />
         </Chapter>
@@ -162,9 +162,9 @@ export function Explore() {
         <Chapter
           id="architecture"
           number={6}
-          title="A complete CNN"
+          title={t.chapters['architecture'].title}
           tags={['computed', 'simulated']}
-          lede="Real networks stack these operations. Here is the small CNN used throughout this app — click any layer to see what goes in, what happens, and what comes out."
+          lede={t.chapters['architecture'].lede}
         >
           <CNNArchitecture />
         </Chapter>
@@ -172,9 +172,9 @@ export function Explore() {
         <Chapter
           id="hierarchy"
           number={7}
-          title="Feature hierarchy"
+          title={t.chapters['hierarchy'].title}
           tags={['computed', 'illustrative']}
-          lede="Each layer builds on the one before it. Deeper neurons see a larger part of the image and can respond to more complex combinations of simpler features."
+          lede={t.chapters['hierarchy'].lede}
         >
           <FeatureHierarchy />
         </Chapter>
@@ -182,9 +182,9 @@ export function Explore() {
         <Chapter
           id="dense"
           number={8}
-          title="Flatten & Dense"
+          title={t.chapters['dense'].title}
           tags={['computed', 'simulated']}
-          lede="To make a decision, the final feature maps are unrolled into one long vector. A fully connected (Dense) layer then gives each class a score — a weighted sum of all the features."
+          lede={t.chapters['dense'].lede}
         >
           <div className="flex flex-col gap-6">
             <FlattenVisualizer />
@@ -195,9 +195,9 @@ export function Explore() {
         <Chapter
           id="softmax"
           number={9}
-          title="Softmax prediction"
+          title={t.chapters['softmax'].title}
           tags={['computed', 'simulated']}
-          lede="The class scores (logits) can be any number. Softmax turns them into probabilities: positive, and summing to 1. Drag the sliders to see how it reacts."
+          lede={t.chapters['softmax'].lede}
         >
           <SoftmaxVisualizer />
         </Chapter>
@@ -205,25 +205,23 @@ export function Explore() {
         <Chapter
           id="experiments"
           number={10}
-          title="What happens if…?"
+          title={t.chapters['experiments'].title}
           tags={['computed']}
-          lede="Change the kernel, stride, padding, activation, pooling or the number of filters, and see the feature maps and tensor shapes update immediately."
+          lede={t.chapters['experiments'].lede}
         >
           <ExperimentPanel />
         </Chapter>
 
         <div className="flex flex-col items-start gap-4 rounded-2xl border border-line bg-surface p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="font-semibold">Run the whole pipeline yourself</div>
-            <p className="text-sm text-ink-2">
-              Step through every layer, or watch the network learn.
-            </p>
+            <div className="font-semibold">{t.explore.ctaTitle}</div>
+            <p className="text-sm text-ink-2">{t.explore.ctaText}</p>
           </div>
           <div className="flex gap-2">
             <ButtonLink to="/playground" variant="primary" iconAfter={<ArrowRightIcon />}>
-              CNN Playground
+              {t.explore.ctaPlayground}
             </ButtonLink>
-            <ButtonLink to="/training">Training</ButtonLink>
+            <ButtonLink to="/training">{t.explore.ctaTraining}</ButtonLink>
           </div>
         </div>
       </div>

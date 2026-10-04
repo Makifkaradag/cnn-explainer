@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { useState } from 'react';
 import { useForward } from '@/hooks/useNetwork';
+import { useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { LAYERS, type LayerSpec, TOTAL_PARAMS } from '@/lib/network';
 import { formatShape } from '@/lib/tensor';
@@ -54,9 +55,12 @@ export function LayerGlyph({ layer, active }: { layer: LayerSpec; active: boolea
 /** Chapter 6: the full architecture as a clickable diagram with a layer inspector. */
 export function CNNArchitecture() {
   const result = useForward();
+  const t = useT();
   const [selected, setSelected] = useState(1);
   const layer = LAYERS[selected];
   const prev = LAYERS[Math.max(0, selected - 1)];
+  const text = t.arch.layers[layer.id];
+  const nameOf = (l: LayerSpec) => (l.id === 'input' ? t.common.input : l.name);
 
   return (
     <div className="flex flex-col gap-4">
@@ -80,7 +84,7 @@ export function CNNArchitecture() {
                     <LayerGlyph layer={l} active={active} />
                   </div>
                   <div className={cx('text-xs font-medium', active ? 'text-accent' : 'text-ink')}>
-                    {l.name}
+                    {nameOf(l)}
                   </div>
                   <div className="font-mono text-[10px] text-ink-3">{formatShape(l.shapeOut)}</div>
                 </button>
@@ -89,10 +93,8 @@ export function CNNArchitecture() {
           })}
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2 text-xs text-ink-3">
-          <span>Click a layer to inspect it · shapes are height × width × channels</span>
-          <span className="font-mono">
-            {TOTAL_PARAMS.toLocaleString('en-US')} learnable parameters in total
-          </span>
+          <span>{t.arch.hint}</span>
+          <span className="font-mono">{t.arch.total(TOTAL_PARAMS.toLocaleString(t.htmlLang))}</span>
         </div>
       </div>
 
@@ -106,8 +108,8 @@ export function CNNArchitecture() {
           className="rounded-xl border border-line bg-surface"
         >
           <div className="flex flex-wrap items-center gap-3 border-b border-line px-4 py-3">
-            <div className="font-semibold">{layer.name}</div>
-            <div className="text-sm text-ink-2">{layer.op}</div>
+            <div className="font-semibold">{nameOf(layer)}</div>
+            <div className="text-sm text-ink-2">{text.op}</div>
             <div className="ml-auto flex items-center gap-2">
               <ShapeChip shape={layer.shapeIn} />
               <ArrowRightIcon className="text-ink-3" />
@@ -117,28 +119,28 @@ export function CNNArchitecture() {
           <div className="grid gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,1fr)]">
             <div className="min-w-0">
               <div className="mb-2 text-xs font-medium text-ink-2">
-                What enters · {formatShape(layer.shapeIn)}
+                {t.arch.enters} · {formatShape(layer.shapeIn)}
               </div>
               {selected === 0 ? (
-                <p className="text-sm text-ink-3">The raw image — nothing comes before it.</p>
+                <p className="text-sm text-ink-3">{t.arch.rawImage}</p>
               ) : (
                 <TensorView tensor={tensorFor(result, prev)} compact />
               )}
             </div>
             <div className="flex flex-col gap-3 text-sm leading-relaxed text-ink-2">
-              <div className="text-xs font-medium text-ink-2">What the layer does</div>
-              <p>{layer.explain}</p>
+              <div className="text-xs font-medium text-ink-2">{t.arch.does}</div>
+              <p>{text.explain}</p>
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="rounded-md bg-surface-2 px-2 py-1 font-mono">
-                  {layer.params.toLocaleString('en-US')} parameters
+                  {t.common.parameters(layer.params.toLocaleString(t.htmlLang))}
                 </span>
-                {layer.kind === 'conv' && <Tag kind="simulated">Weights not learned</Tag>}
-                {layer.kind === 'dense' && <Tag kind="computed">Trained in your browser</Tag>}
+                {layer.kind === 'conv' && <Tag kind="simulated">{t.arch.notLearned}</Tag>}
+                {layer.kind === 'dense' && <Tag kind="computed">{t.arch.trainedHere}</Tag>}
               </div>
             </div>
             <div className="min-w-0">
               <div className="mb-2 text-xs font-medium text-ink-2">
-                What comes out · {formatShape(layer.shapeOut)}
+                {t.arch.comesOut} · {formatShape(layer.shapeOut)}
               </div>
               <TensorView tensor={tensorFor(result, layer)} compact />
             </div>

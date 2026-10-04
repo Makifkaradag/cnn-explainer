@@ -4,6 +4,7 @@ import { useImage } from '@/context/image';
 import { useTheme } from '@/context/theme';
 import { makeKernel } from '@/data/kernels';
 import { useStepper } from '@/hooks/useStepper';
+import { useT } from '@/i18n/context';
 import { activate } from '@/lib/activations';
 import { css, textOn, valueColor } from '@/lib/colors';
 import { convolve2d } from '@/lib/convolution';
@@ -21,6 +22,7 @@ import { PlaybackControls } from './ui/PlaybackControls';
 export function PoolingVisualizer() {
   const { image } = useImage();
   const { theme } = useTheme();
+  const t = useT();
   const [mode, setMode] = useState<PoolMode>('max');
   const [size, setSize] = useState(2);
   const [stride, setStride] = useState(2);
@@ -46,28 +48,28 @@ export function PoolingVisualizer() {
     <Card>
       <div className="flex flex-col gap-4 border-b border-line p-4">
         <div className="flex flex-wrap gap-4">
-          <Field label="Pooling type">
+          <Field label={t.pool.type}>
             <Segmented
-              aria-label="Pooling type"
+              aria-label={t.pool.type}
               value={mode}
               onChange={setMode}
               options={[
-                { value: 'max', label: 'Max pooling' },
-                { value: 'avg', label: 'Average pooling' },
+                { value: 'max', label: t.pool.maxPooling },
+                { value: 'avg', label: t.pool.avgPooling },
               ]}
             />
           </Field>
-          <Field label="Window">
+          <Field label={t.pool.window}>
             <Segmented
-              aria-label="Window size"
+              aria-label={t.pool.windowSize}
               value={size}
               onChange={setSize}
               options={[2, 3].map((s) => ({ value: s, label: `${s}×${s}` }))}
             />
           </Field>
-          <Field label="Stride">
+          <Field label={t.common.stride}>
             <Segmented
-              aria-label="Stride"
+              aria-label={t.common.stride}
               value={stride}
               onChange={setStride}
               options={[1, 2, 3].map((s) => ({ value: s, label: String(s) }))}
@@ -89,7 +91,7 @@ export function PoolingVisualizer() {
 
       <div className="grid gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <Caption shape={[n, n]}>Input feature map (after ReLU)</Caption>
+          <Caption shape={[n, n]}>{t.pool.input}</Caption>
           <PixelGrid
             data={input}
             range={range}
@@ -105,9 +107,7 @@ export function PoolingVisualizer() {
         </div>
 
         <div className="flex flex-col items-center gap-3 lg:pt-8">
-          <div className="text-xs font-medium text-ink-2">
-            Current {size}×{size} region
-          </div>
+          <div className="text-xs font-medium text-ink-2">{t.pool.region(size)}</div>
           <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${size}, 3.25rem)` }}>
             {step.values.flatMap((row, m) =>
               row.map((v, c) => {
@@ -131,7 +131,7 @@ export function PoolingVisualizer() {
           </div>
           <ArrowDownIcon className="text-ink-3" />
           <div className="text-center font-mono text-xs text-ink-2">
-            {mode === 'max' ? 'max(…)' : `sum / ${size * size}`}
+            {mode === 'max' ? 'max(…)' : t.pool.sum(size * size)}
           </div>
           <motion.div
             key={stepper.index + mode}
@@ -145,7 +145,7 @@ export function PoolingVisualizer() {
         </div>
 
         <div className="min-w-0">
-          <Caption shape={[out, out]}>Output (pooled)</Caption>
+          <Caption shape={[out, out]}>{t.pool.output}</Caption>
           <PixelGrid
             data={output}
             range={range}
@@ -168,18 +168,13 @@ export function PoolingVisualizer() {
           </div>
         </div>
         <div>
-          <div className="font-mono text-ink">
-            {n * n} → {out * out} values
-          </div>
+          <div className="font-mono text-ink">{t.pool.values(n * n, out * out)}</div>
           <div className="text-xs text-ink-3">
-            {((n * n) / Math.max(1, out * out)).toFixed(1)}× fewer numbers for the next layer
+            {t.pool.fewer(((n * n) / Math.max(1, out * out)).toFixed(1))}
           </div>
         </div>
         <div className="text-xs leading-relaxed text-ink-2">
-          {mode === 'max'
-            ? 'Max pooling keeps only the strongest response in each window: “was the pattern present here?” — not exactly where.'
-            : 'Average pooling keeps the mean response of each window, which smooths the map.'}{' '}
-          It has no learnable weights.
+          {mode === 'max' ? t.pool.maxNote : t.pool.avgNote} {t.pool.noWeights}
         </div>
       </div>
     </Card>

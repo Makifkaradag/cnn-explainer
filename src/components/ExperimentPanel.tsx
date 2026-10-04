@@ -1,12 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useImage } from '@/context/image';
-import {
-  KERNEL_PRESETS,
-  KERNEL_SIZES,
-  type KernelPresetId,
-  makeKernel,
-  presetLabel,
-} from '@/data/kernels';
+import { KERNEL_PRESETS, KERNEL_SIZES, type KernelPresetId, makeKernel } from '@/data/kernels';
+import { useT } from '@/i18n/context';
 import { ACTIVATION_NAMES, ACTIVATIONS, activate } from '@/lib/activations';
 import { convOutputSize, convolve2d, convParamCount } from '@/lib/convolution';
 import { pool2d, poolOutputSize } from '@/lib/pooling';
@@ -24,6 +19,7 @@ const MAX_FILTERS = 6;
 /** Chapter 10: change any hyper-parameter and watch shapes and feature maps update instantly. */
 export function ExperimentPanel() {
   const { image } = useImage();
+  const t = useT();
   const [kernelId, setKernelId] = useState<KernelPresetId>('edge');
   const [size, setSize] = useState(3);
   const [stride, setStride] = useState(1);
@@ -35,10 +31,10 @@ export function ExperimentPanel() {
 
   const bank = useMemo(
     () =>
-      [
-        kernelId,
-        ...KERNEL_PRESETS.map((p) => p.id).filter((id) => id !== kernelId && id !== 'identity'),
-      ].slice(0, filters),
+      [kernelId, ...KERNEL_PRESETS.filter((id) => id !== kernelId && id !== 'identity')].slice(
+        0,
+        filters,
+      ),
     [kernelId, filters],
   );
 
@@ -61,7 +57,7 @@ export function ExperimentPanel() {
   const cell = Math.max(2.5, Math.min(6, 150 / Math.max(convSize, 1)));
 
   const flow: { label: string; shape: number[] }[] = [
-    { label: 'Input', shape: [28, 28, 1] },
+    { label: t.common.input, shape: [28, 28, 1] },
     {
       label: `Conv ${size}×${size} · s${stride} · p${padding}`,
       shape: [convSize, convSize, filters],
@@ -77,43 +73,43 @@ export function ExperimentPanel() {
     <Card>
       <div className="grid lg:grid-cols-[260px_minmax(0,1fr)]">
         <div className="flex flex-col gap-4 border-b border-line p-4 lg:border-r lg:border-b-0">
-          <Field label="First kernel">
+          <Field label={t.exp.firstKernel}>
             <Select<KernelPresetId>
-              aria-label="Kernel"
+              aria-label={t.common.kernel}
               value={kernelId}
               onChange={setKernelId}
-              options={KERNEL_PRESETS.map((p) => ({ value: p.id, label: p.label }))}
+              options={KERNEL_PRESETS.map((id) => ({ value: id, label: t.kernels[id] }))}
             />
           </Field>
-          <Field label="Kernel size">
+          <Field label={t.common.kernelSize}>
             <Segmented
-              aria-label="Kernel size"
+              aria-label={t.common.kernelSize}
               value={size}
               onChange={setSize}
               options={KERNEL_SIZES.map((s) => ({ value: s, label: `${s}×${s}` }))}
             />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Stride">
+            <Field label={t.common.stride}>
               <Segmented
-                aria-label="Stride"
+                aria-label={t.common.stride}
                 value={stride}
                 onChange={setStride}
                 options={[1, 2, 3].map((s) => ({ value: s, label: String(s) }))}
               />
             </Field>
-            <Field label="Padding">
+            <Field label={t.common.padding}>
               <Segmented
-                aria-label="Padding"
+                aria-label={t.common.padding}
                 value={padding}
                 onChange={setPadding}
                 options={[0, 1, 2].map((s) => ({ value: s, label: String(s) }))}
               />
             </Field>
           </div>
-          <Field label="Activation">
+          <Field label={t.common.activation}>
             <Select<ActivationName>
-              aria-label="Activation"
+              aria-label={t.common.activation}
               value={activation}
               onChange={setActivation}
               options={ACTIVATION_NAMES.map((n) => ({ value: n, label: ACTIVATIONS[n].label }))}
@@ -121,20 +117,20 @@ export function ExperimentPanel() {
           </Field>
           <ActivationPlot name={activation} domain={3} />
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Pooling">
+            <Field label={t.common.pooling}>
               <Segmented
-                aria-label="Pooling type"
+                aria-label={t.common.pooling}
                 value={poolMode}
                 onChange={setPoolMode}
                 options={[
-                  { value: 'max', label: 'Max' },
-                  { value: 'avg', label: 'Avg' },
+                  { value: 'max', label: t.common.max },
+                  { value: 'avg', label: t.common.avg },
                 ]}
               />
             </Field>
-            <Field label="Pool size">
+            <Field label={t.exp.poolSize}>
               <Segmented
-                aria-label="Pool size"
+                aria-label={t.exp.poolSize}
                 value={poolSize}
                 onChange={setPoolSize}
                 options={[2, 3].map((s) => ({ value: s, label: `${s}×${s}` }))}
@@ -142,7 +138,7 @@ export function ExperimentPanel() {
             </Field>
           </div>
           <Slider
-            label="Number of filters"
+            label={t.exp.filters}
             value={filters}
             min={1}
             max={MAX_FILTERS}
@@ -165,10 +161,10 @@ export function ExperimentPanel() {
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-1 font-mono text-xs text-ink-3">
             <span>
-              conv output: ⌊(28 + 2·{padding} − {size}) / {stride}⌋ + 1 = {convSize}
+              {t.exp.convOut}: ⌊(28 + 2·{padding} − {size}) / {stride}⌋ + 1 = {convSize}
             </span>
             <span>
-              parameters: ({size}·{size}·1 + 1) · {filters} = {convParamCount(size, 1, filters)}
+              {t.exp.params}: ({size}·{size}·1 + 1) · {filters} = {convParamCount(size, 1, filters)}
             </span>
           </div>
 
@@ -176,7 +172,7 @@ export function ExperimentPanel() {
             <table className="w-full border-separate border-spacing-y-2 text-left text-xs">
               <thead className="text-ink-3">
                 <tr>
-                  <th className="pr-3 font-medium">Filter</th>
+                  <th className="pr-3 font-medium">{t.exp.filter}</th>
                   <th className="pr-3 font-medium">Conv · {formatShape([convSize, convSize])}</th>
                   <th className="pr-3 font-medium">{ACTIVATIONS[activation].label}</th>
                   <th className="font-medium">Pool · {formatShape([poolOut, poolOut])}</th>
@@ -186,7 +182,7 @@ export function ExperimentPanel() {
                 {rows.map((r) => (
                   <tr key={r.id} className="align-top">
                     <td className="pr-3">
-                      <div className="mb-1 whitespace-nowrap text-ink-2">{presetLabel(r.id)}</div>
+                      <div className="mb-1 whitespace-nowrap text-ink-2">{t.kernels[r.id]}</div>
                       <div className={size === 3 ? 'w-24' : 'w-32'}>
                         <KernelEditor kernel={r.kernel} readOnly />
                       </div>
@@ -201,7 +197,7 @@ export function ExperimentPanel() {
                       {poolOut > 0 ? (
                         <PixelGrid data={r.pooled} range={actRange} cellSize={cell} />
                       ) : (
-                        <span className="text-warn">Too small to pool</span>
+                        <span className="text-warn">{t.exp.tooSmall}</span>
                       )}
                     </td>
                   </tr>
@@ -209,11 +205,7 @@ export function ExperimentPanel() {
               </tbody>
             </table>
           </div>
-          <p className="text-xs leading-relaxed text-ink-3">
-            Try: stride 2 (output shrinks by half) · padding 1 with a 3×3 kernel (“same” size) ·
-            Sigmoid (no negatives, everything shifts towards 0.5) · average vs. max pooling. All
-            outputs are recomputed live from the current input image.
-          </p>
+          <p className="text-xs leading-relaxed text-ink-3">{t.exp.tip}</p>
         </div>
       </div>
     </Card>

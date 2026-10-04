@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useMemo, useState } from 'react';
 import { useImage } from '@/context/image';
 import { useForward } from '@/hooks/useNetwork';
+import { useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { Raster } from '@/lib/raster';
 import { maxAbs } from '@/lib/tensor';
@@ -19,7 +20,6 @@ function glyph(fn: (r: Raster) => void): Matrix {
 // Hand-drawn icons that stand in for what deeper layers *might* respond to.
 const PARTS = [
   {
-    name: 'corner',
     m: glyph((r) =>
       r.polyline(
         [
@@ -31,17 +31,16 @@ const PARTS = [
       ),
     ),
   },
-  { name: 'curve', m: glyph((r) => r.arc(13, 13, 9, Math.PI, 1.5 * Math.PI, 2)) },
-  { name: 'junction', m: glyph((r) => r.line([2, 8], [14, 8], 2).line([8, 8], [8, 14], 2)) },
-  { name: 'line end', m: glyph((r) => r.line([2, 8], [9, 8], 2).fillCircle(9, 8, 1.5)) },
-  { name: 'parallel', m: glyph((r) => r.line([4, 2], [4, 14], 2).line([11, 2], [11, 14], 2)) },
-  { name: 'ring', m: glyph((r) => r.circle(8, 8, 4, 2)) },
+  { m: glyph((r) => r.arc(13, 13, 9, Math.PI, 1.5 * Math.PI, 2)) },
+  { m: glyph((r) => r.line([2, 8], [14, 8], 2).line([8, 8], [8, 14], 2)) },
+  { m: glyph((r) => r.line([2, 8], [9, 8], 2).fillCircle(9, 8, 1.5)) },
+  { m: glyph((r) => r.line([4, 2], [4, 14], 2).line([11, 2], [11, 14], 2)) },
+  { m: glyph((r) => r.circle(8, 8, 4, 2)) },
 ];
 
 const WHOLES = [
-  { name: 'round object', m: glyph((r) => r.circle(8, 8, 5.5, 2)) },
+  { m: glyph((r) => r.circle(8, 8, 5.5, 2)) },
   {
-    name: 'box-like',
     m: glyph((r) =>
       r.polyline(
         [
@@ -56,7 +55,6 @@ const WHOLES = [
     ),
   },
   {
-    name: 'pointed',
     m: glyph((r) =>
       r.polyline(
         [
@@ -70,7 +68,6 @@ const WHOLES = [
     ),
   },
   {
-    name: 'face-like',
     m: glyph((r) =>
       r
         .circle(8, 8, 6.5, 1.4)
@@ -82,53 +79,24 @@ const WHOLES = [
 ];
 
 interface Level {
-  title: string;
-  subtitle: string;
   rf: number;
-  rfNote: string;
   tag: TagKind;
-  tagText: string;
 }
 
+// Receptive-field sizes: conv 3×3 → 3, then pool + conv → 8. Layers 3–4 are hypothetical.
 const LEVELS: Level[] = [
-  {
-    title: 'Layer 1',
-    subtitle: 'Edges',
-    rf: 3,
-    rfNote: 'sees 3×3 pixels',
-    tag: 'computed',
-    tagText: 'Computed by this app',
-  },
-  {
-    title: 'Layer 2',
-    subtitle: 'Textures / simple shapes',
-    rf: 8,
-    rfNote: 'sees 8×8 pixels',
-    tag: 'computed',
-    tagText: 'Computed (random filters)',
-  },
-  {
-    title: 'Layer 3',
-    subtitle: 'Parts / patterns',
-    rf: 18,
-    rfNote: '≈18×18 in a deeper net',
-    tag: 'illustrative',
-    tagText: 'Illustrative',
-  },
-  {
-    title: 'Layer 4',
-    subtitle: 'Higher-level structures',
-    rf: 28,
-    rfNote: 'the whole image',
-    tag: 'illustrative',
-    tagText: 'Illustrative',
-  },
+  { rf: 3, tag: 'computed' },
+  { rf: 8, tag: 'computed' },
+  { rf: 18, tag: 'illustrative' },
+  { rf: 28, tag: 'illustrative' },
 ];
 
 /** Chapter 7: an intuition for hierarchical features and growing receptive fields. */
 export function FeatureHierarchy() {
   const { image } = useImage();
   const result = useForward();
+  const t = useT();
+  const levels = t.hierarchy.levels;
   const [hovered, setHovered] = useState(0);
 
   const layer1 = useMemo(() => [0, 2, 4, 6].map((i) => result.act1[i]), [result]);
@@ -149,7 +117,7 @@ export function FeatureHierarchy() {
   return (
     <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
       <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4">
-        <div className="text-xs font-medium text-ink-2">Receptive field</div>
+        <div className="text-xs font-medium text-ink-2">{t.hierarchy.rf}</div>
         <PixelGrid
           data={image}
           scale="gray"
@@ -159,16 +127,14 @@ export function FeatureHierarchy() {
           ]}
         />
         <p className="text-xs leading-relaxed text-ink-3">
-          The highlighted area is how much of the input one neuron in{' '}
-          <span className="text-ink-2">{LEVELS[hovered].title}</span> can “see” —{' '}
-          {LEVELS[hovered].rfNote}. Stacking convolutions and pooling makes it grow.
+          {t.hierarchy.rfText(levels[hovered].title, levels[hovered].rfNote)}
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
         {LEVELS.map((level, li) => (
           <motion.div
-            key={level.title}
+            key={li}
             initial={{ opacity: 0, x: -12 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: '-40px' }}
@@ -177,15 +143,15 @@ export function FeatureHierarchy() {
             onFocus={() => setHovered(li)}
             tabIndex={0}
             className={cx(
-              'grid items-center gap-4 rounded-xl border bg-surface p-3 transition sm:grid-cols-[150px_minmax(0,1fr)]',
+              'grid items-center gap-4 rounded-xl border bg-surface p-3 transition sm:grid-cols-[200px_minmax(0,1fr)]',
               hovered === li ? 'border-accent/60' : 'border-line',
             )}
           >
             <div>
-              <div className="text-xs text-ink-3">{level.title}</div>
-              <div className="font-semibold">{level.subtitle}</div>
+              <div className="text-xs text-ink-3">{levels[li].title}</div>
+              <div className="font-semibold">{levels[li].subtitle}</div>
               <div className="mt-1.5">
-                <Tag kind={level.tag}>{level.tagText}</Tag>
+                <Tag kind={level.tag}>{levels[li].tag}</Tag>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -202,7 +168,7 @@ export function FeatureHierarchy() {
                       data={m}
                       range={r1}
                       cellSize={2.6}
-                      title={['vertical', 'horizontal', 'diagonal', 'outline'][i]}
+                      title={t.hierarchy.edgeNames[i]}
                     />
                   </motion.div>
                 ))}
@@ -215,29 +181,34 @@ export function FeatureHierarchy() {
                     viewport={{ once: true }}
                     transition={{ delay: li * 0.12 + k * 0.06 }}
                   >
-                    <FeatureMap data={m} range={r2} cellSize={6} title={`channel ${i + 1}`} />
+                    <FeatureMap
+                      data={m}
+                      range={r2}
+                      cellSize={6}
+                      title={t.hierarchy.channel(i + 1)}
+                    />
                   </motion.div>
                 ))}
               {(li === 2 ? PARTS : li === 3 ? WHOLES : []).map((g, k) => (
                 <motion.div
-                  key={g.name}
+                  key={k}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: li * 0.12 + k * 0.06 }}
                 >
-                  <FeatureMap data={g.m} range={1} cellSize={4.2} title={g.name} />
+                  <FeatureMap
+                    data={g.m}
+                    range={1}
+                    cellSize={4.2}
+                    title={(li === 2 ? t.hierarchy.parts : t.hierarchy.wholes)[k]}
+                  />
                 </motion.div>
               ))}
             </div>
           </motion.div>
         ))}
-        <p className="text-xs leading-relaxed text-ink-3">
-          This is an intuitive picture of hierarchical feature learning, not a guarantee. Layers 1–2
-          are real outputs of this app's tiny network; layers 3–4 are drawings. Studies of trained
-          CNNs often find a similar progression from simple to complex features, but what each layer
-          learns depends on the data, architecture and training.
-        </p>
+        <p className="text-xs leading-relaxed text-ink-3">{t.hierarchy.note}</p>
       </div>
     </div>
   );

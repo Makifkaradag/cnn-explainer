@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
 import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useT } from '@/i18n/context';
 import { CLASS_NAMES, type DenseParams, denseForward } from '@/lib/network';
 import { createRng } from '@/lib/random';
 import { crossEntropy, softmax } from '@/lib/softmax';
@@ -21,13 +22,8 @@ import { Button, Field, Segmented } from './ui/controls';
 import { Card, Note, Stat, Tag } from './ui/display';
 import { PauseIcon, PlayIcon, ResetIcon, StepIcon } from './ui/Icons';
 
-const PHASES = [
-  { name: 'Forward pass', detail: 'Run the batch through the network' },
-  { name: 'Prediction', detail: 'Softmax gives class probabilities' },
-  { name: 'Loss', detail: 'Cross-entropy: −log p(correct class)' },
-  { name: 'Backpropagation', detail: '∂loss/∂w for every weight (here: p − y times x)' },
-  { name: 'Weight update', detail: 'w ← w − learning rate × gradient' },
-] as const;
+/** forward pass → prediction → loss → backprop → weight update (labels come from i18n). */
+const PHASE_COUNT = 5;
 
 type Speed = 'explain' | 'normal' | 'fast';
 const TICK_MS: Record<Speed, number> = { explain: 650, normal: 220, fast: 40 };
@@ -102,9 +98,9 @@ function reducer(state: State, action: Action): State {
     case 'tick': {
       if (!action.explain)
         return { ...applyStep(state, action.data, action.lr, action.batchSize), phase: -1 };
-      const phase = (state.phase + 1) % PHASES.length;
+      const phase = (state.phase + 1) % PHASE_COUNT;
       // Weights change exactly when the "Weight update" phase lights up.
-      if (phase === PHASES.length - 1)
+      if (phase === PHASE_COUNT - 1)
         return { ...applyStep(state, action.data, action.lr, action.batchSize), phase };
       return { ...state, phase };
     }
@@ -113,6 +109,8 @@ function reducer(state: State, action: Action): State {
 
 /** A real (but deliberately small) training loop for the Dense layer, visualised step by step. */
 export function TrainingSimulator() {
+  const t = useT();
+  const tt = t.training;
   const data = useMemo(() => generateDataset(24, 8, 11), []);
   const [seed, setSeed] = useState(1);
   const [state, dispatch] = useReducer(reducer, 1, initState);
@@ -135,9 +133,9 @@ export function TrainingSimulator() {
   const epoch = (state.iteration * batchSize) / data.train.length;
   const last = state.history[state.history.length - 1];
   // In explain mode the batch shown is the one being processed in the current cycle.
-  const shownIteration = state.phase === PHASES.length - 1 ? state.iteration - 1 : state.iteration;
+  const shownIteration = state.phase === PHASE_COUNT - 1 ? state.iteration - 1 : state.iteration;
   const sample = batchAt(data, Math.max(0, shownIteration), batchSize)[0];
-  const sampleParams = state.phase === PHASES.length - 1 ? state.previous : state.params;
+  const sampleParams = state.phase === PHASE_COUNT - 1 ? state.previous : state.params;
   const sampleProbs = softmax(denseForward(sampleParams, sample.x));
   const sampleLoss = crossEntropy(sampleProbs, sample.label);
 
@@ -171,7 +169,7 @@ export function TrainingSimulator() {
               onClick={() => setPlaying((p) => !p)}
               className="w-28"
             >
-              {playing ? 'Pause' : 'Train'}
+              {playing ? t.common.pause : tt.train}
             </Button>
             <Button
               icon={<StepIcon />}
@@ -180,35 +178,35 @@ export function TrainingSimulator() {
                 dispatch({ type: 'step', data, lr, batchSize });
               }}
             >
-              One step
+              {tt.oneStep}
             </Button>
             <Button variant="ghost" icon={<ResetIcon />} onClick={reset}>
-              Reset
+              {t.common.reset}
             </Button>
           </div>
-          <Field label="Speed">
+          <Field label={tt.speed}>
             <Segmented
-              aria-label="Speed"
+              aria-label={tt.speed}
               value={speed}
               onChange={setSpeed}
               options={[
-                { value: 'explain', label: 'Explain' },
-                { value: 'normal', label: 'Normal' },
-                { value: 'fast', label: 'Fast' },
+                { value: 'explain', label: tt.speeds[0] },
+                { value: 'normal', label: tt.speeds[1] },
+                { value: 'fast', label: tt.speeds[2] },
               ]}
             />
           </Field>
-          <Field label="Learning rate">
+          <Field label={tt.lr}>
             <Segmented
-              aria-label="Learning rate"
+              aria-label={tt.lr}
               value={lr}
               onChange={setLr}
               options={[0.1, 0.5, 1.5, 8].map((v) => ({ value: v, label: String(v) }))}
             />
           </Field>
-          <Field label="Batch size">
+          <Field label={tt.batch}>
             <Segmented
-              aria-label="Batch size"
+              aria-label={tt.batch}
               value={batchSize}
               onChange={setBatchSize}
               options={[4, 16, 64].map((v) => ({ value: v, label: String(v) }))}
@@ -218,7 +216,7 @@ export function TrainingSimulator() {
 
         {/* The training loop */}
         <div className="flex flex-wrap items-stretch gap-2 p-4">
-          {PHASES.map((p, i) => (
+          {tt.phases.map((p, i) => (
             <div key={p.name} className="flex min-w-[150px] flex-1 items-center gap-2">
               <motion.div
                 animate={{ scale: lit(i) && state.phase === i ? 1.03 : 1 }}
@@ -231,43 +229,43 @@ export function TrainingSimulator() {
                 <span className="text-sm font-medium">{p.name}</span>
                 <span className="text-[11px] leading-snug text-ink-3">{p.detail}</span>
               </motion.div>
-              {i < PHASES.length - 1 && <span className="hidden text-ink-3 xl:inline">→</span>}
+              {i < PHASE_COUNT - 1 && <span className="hidden text-ink-3 xl:inline">→</span>}
             </div>
           ))}
-          <div className="flex items-center px-2 text-xs text-ink-3">↺ next iteration</div>
+          <div className="flex items-center px-2 text-xs text-ink-3">{tt.next}</div>
         </div>
 
         <div className="grid grid-cols-2 gap-2 border-t border-line p-4 sm:grid-cols-5">
+          <Stat label={tt.epoch} value={epoch.toFixed(2)} sub={tt.trainImages(data.train.length)} />
+          <Stat label={tt.iteration} value={state.iteration} sub={tt.batchOf(batchSize)} />
+          <Stat label={tt.loss} value={last ? fmt(last.loss, 3) : '—'} sub={tt.thisBatch} />
           <Stat
-            label="Epoch"
-            value={epoch.toFixed(2)}
-            sub={`${data.train.length} training images`}
-          />
-          <Stat label="Iteration" value={state.iteration} sub={`batch of ${batchSize}`} />
-          <Stat label="Loss" value={last ? fmt(last.loss, 3) : '—'} sub="this batch" />
-          <Stat
-            label="Accuracy"
+            label={tt.accuracy}
             value={last ? `${(last.acc * 100).toFixed(0)}%` : '—'}
-            sub="this batch"
+            sub={tt.thisBatch}
           />
           <Stat
-            label="Validation"
+            label={tt.validation}
             value={last ? `${(last.valAcc * 100).toFixed(0)}%` : '—'}
-            sub={`${data.validation.length} unseen images`}
+            sub={tt.unseen(data.validation.length)}
           />
         </div>
       </Card>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Loss" aside={<span className="text-xs text-ink-3">lower is better</span>}>
+        <Card title={tt.loss} aside={<span className="text-xs text-ink-3">{tt.lower}</span>}>
           <div className="p-4">
             <LineChart
-              label="Loss over iterations"
+              label={tt.lossAria}
               lastX={state.iteration}
               series={[
-                { name: 'batch', values: state.history.map((h) => h.loss), color: 'var(--accent)' },
                 {
-                  name: 'validation',
+                  name: tt.batchSeries,
+                  values: state.history.map((h) => h.loss),
+                  color: 'var(--accent)',
+                },
+                {
+                  name: tt.valSeries,
                   values: state.history.map((h) => h.valLoss),
                   color: 'var(--ink-3)',
                   dashed: true,
@@ -276,17 +274,21 @@ export function TrainingSimulator() {
             />
           </div>
         </Card>
-        <Card title="Accuracy" aside={<span className="text-xs text-ink-3">higher is better</span>}>
+        <Card title={tt.accuracy} aside={<span className="text-xs text-ink-3">{tt.higher}</span>}>
           <div className="p-4">
             <LineChart
-              label="Accuracy over iterations"
+              label={tt.accAria}
               lastX={state.iteration}
               yDomain={[0, 1]}
               format={(v) => `${Math.round(v * 100)}%`}
               series={[
-                { name: 'batch', values: state.history.map((h) => h.acc), color: 'var(--accent)' },
                 {
-                  name: 'validation',
+                  name: tt.batchSeries,
+                  values: state.history.map((h) => h.acc),
+                  color: 'var(--accent)',
+                },
+                {
+                  name: tt.valSeries,
                   values: state.history.map((h) => h.valAcc),
                   color: 'var(--ink-3)',
                   dashed: true,
@@ -295,15 +297,15 @@ export function TrainingSimulator() {
             />
           </div>
         </Card>
-        <Card title="One example from the batch">
+        <Card title={tt.example}>
           <div className="flex gap-4 p-4">
             <PixelGrid data={sample.image} scale="gray" cellSize={3.4} className="shrink-0" />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
               <div className="text-xs text-ink-2">
-                true label:{' '}
-                <span className="font-semibold text-ink">{CLASS_NAMES[sample.label]}</span>
+                {tt.trueLabel}{' '}
+                <span className="font-semibold text-ink">{t.classes[sample.label]}</span>
               </div>
-              <Bars labels={CLASS_NAMES} values={sampleProbs} highlight={sample.label} />
+              <Bars labels={t.classes} values={sampleProbs} highlight={sample.label} />
               <div className="font-mono text-xs text-ink-3">
                 loss = −log({sampleProbs[sample.label].toFixed(3)}) ={' '}
                 <span className="text-ink">{fmt(sampleLoss, 3)}</span>
@@ -315,40 +317,35 @@ export function TrainingSimulator() {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <Card
-          title="Dense-layer weights, reshaped as 16 maps of 5×5"
+          title={tt.weightsTitle}
           aside={
             <div className="flex flex-wrap gap-2">
               <Segmented
-                aria-label="Class"
+                aria-label={tt.cls}
                 value={cls}
                 onChange={setCls}
-                options={CLASS_NAMES.map((n, i) => ({ value: i, label: n }))}
+                options={t.classes.map((n, i) => ({ value: i, label: n }))}
               />
               <Segmented
-                aria-label="Show"
+                aria-label={tt.show}
                 value={view}
                 onChange={setView}
                 options={[
-                  { value: 'weights', label: 'Weights' },
-                  { value: 'gradient', label: 'Last gradient' },
+                  { value: 'weights', label: tt.weights },
+                  { value: 'gradient', label: tt.gradient },
                 ]}
               />
             </div>
           }
         >
           <div className="p-4">
-            <FeatureMapStack maps={maps} cellSize={9} labels={(i) => `ch ${i + 1}`} />
+            <FeatureMapStack maps={maps} cellSize={9} labels={(i) => tt.ch(i + 1)} />
             <p className="mt-3 text-xs leading-relaxed text-ink-3">
-              Each weight connects one flattened feature to the{' '}
-              <span className="text-ink-2">{CLASS_NAMES[cls]}</span> neuron. Orange weights push the
-              score up when that feature is active, blue ones push it down. Watch them sharpen as
-              training proceeds.{' '}
-              {view === 'gradient' &&
-                'The gradient shows the direction each weight is about to move (opposite sign).'}
+              {tt.weightsNote(t.classes[cls])} {view === 'gradient' && tt.gradientNote}
             </p>
           </div>
         </Card>
-        <Card title="Individual weights">
+        <Card title={tt.individual}>
           <div className="flex flex-col gap-2 p-4">
             {TRACKED.map(({ k, i }) => {
               const w = state.params.W[k][i];
@@ -363,7 +360,7 @@ export function TrainingSimulator() {
                   className="grid grid-cols-[6.5rem_minmax(0,1fr)_4rem_3.5rem] items-center gap-2 font-mono text-xs"
                 >
                   <span className="truncate text-ink-3">
-                    w[{CLASS_NAMES[k].slice(0, 3).toLowerCase()}, {i}]
+                    w[{t.classes[k].slice(0, 3).toLocaleLowerCase(t.htmlLang)}, {i}]
                   </span>
                   <div className="relative h-3 rounded-sm bg-surface-2">
                     <div className="absolute inset-y-0 left-1/2 w-px bg-line-strong" />
@@ -389,9 +386,7 @@ export function TrainingSimulator() {
                 </div>
               );
             })}
-            <p className="mt-2 text-xs leading-relaxed text-ink-3">
-              Value and the change (Δ) from the most recent update.
-            </p>
+            <p className="mt-2 text-xs leading-relaxed text-ink-3">{tt.individualNote}</p>
           </div>
         </Card>
       </div>
@@ -399,20 +394,12 @@ export function TrainingSimulator() {
       <div className="flex flex-col gap-3 md:flex-row">
         <Note className="flex-1">
           <div className="mb-1.5 flex flex-wrap gap-2">
-            <Tag kind="computed">Real gradient descent</Tag>
-            <Tag kind="simulated">Simplified setup</Tag>
+            <Tag kind="computed">{tt.realTag}</Tag>
+            <Tag kind="simulated">{tt.simTag}</Tag>
           </div>
-          The numbers above come from actual mini-batch gradient descent on softmax cross-entropy —
-          nothing is faked. But only the final Dense layer (1,604 parameters) is trained, on{' '}
-          {data.train.length} synthetic drawings. The convolutional filters stay frozen to keep it
-          fast.
+          {tt.realNote(data.train.length)}
         </Note>
-        <Note className="flex-1">
-          In a real CNN, backpropagation keeps going: the chain rule carries the gradient back
-          through the Dense layer, pooling, ReLU and every convolution, so <strong>all</strong>{' '}
-          filter weights are learned from data. That usually takes many epochs over thousands of
-          images, often on a GPU. Try learning rate 8 to see an unstable, jumpy loss.
-        </Note>
+        <Note className="flex-1">{tt.realCnnNote}</Note>
       </div>
     </div>
   );

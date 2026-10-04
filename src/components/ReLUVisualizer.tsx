@@ -1,6 +1,7 @@
 import { type KeyboardEvent, useMemo, useState } from 'react';
 import { useImage } from '@/context/image';
-import { type KernelPresetId, makeKernel, presetLabel } from '@/data/kernels';
+import { type KernelPresetId, makeKernel } from '@/data/kernels';
+import { useT } from '@/i18n/context';
 import { activate } from '@/lib/activations';
 import { convolve2d } from '@/lib/convolution';
 import { cx } from '@/lib/cx';
@@ -25,6 +26,7 @@ function findExtreme(m: number[][], sign: 1 | -1): GridCell {
 /** Chapter 4: ReLU applied element-wise to a real feature map. */
 export function ReLUVisualizer() {
   const { image } = useImage();
+  const t = useT();
   const [kernelId, setKernelId] = useState<KernelPresetId>('vertical');
   const [picked, setPicked] = useState<GridCell | null>(null);
 
@@ -58,28 +60,28 @@ export function ReLUVisualizer() {
   };
 
   const highlight = [{ ...cell, tone: 'accent' as const }];
-  const verdict = x < 0 ? 'negative → 0' : x > 0 ? 'positive → unchanged' : 'zero stays zero';
+  const verdict = x < 0 ? t.relu.negative : x > 0 ? t.relu.positive : t.relu.zero;
 
   return (
     <Card>
       <div className="flex flex-wrap items-end gap-4 border-b border-line p-4">
-        <Field label="Feature map from kernel">
+        <Field label={t.relu.from}>
           <Segmented
-            aria-label="Kernel"
+            aria-label={t.common.kernel}
             value={kernelId}
             onChange={(id) => {
               setKernelId(id);
               setPicked(null);
             }}
-            options={KERNELS.map((id) => ({ value: id, label: presetLabel(id) }))}
+            options={KERNELS.map((id) => ({ value: id, label: t.kernels[id] }))}
           />
         </Field>
         <div className="flex gap-2">
           <Button size="sm" onClick={() => setPicked(findExtreme(before, -1))}>
-            Most negative
+            {t.relu.mostNeg}
           </Button>
           <Button size="sm" onClick={() => setPicked(findExtreme(before, 1))}>
-            Most positive
+            {t.relu.mostPos}
           </Button>
         </div>
       </div>
@@ -88,10 +90,10 @@ export function ReLUVisualizer() {
         tabIndex={0}
         onKeyDown={onKey}
         className="grid gap-6 p-4 outline-none lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.9fr)]"
-        aria-label="Use arrow keys to move the highlighted pixel"
+        aria-label={t.relu.keysLabel}
       >
         <div className="min-w-0">
-          <Caption shape={[size, size]}>Before ReLU</Caption>
+          <Caption shape={[size, size]}>{t.relu.before}</Caption>
           <PixelGrid
             data={before}
             range={range}
@@ -102,7 +104,7 @@ export function ReLUVisualizer() {
           />
         </div>
         <div className="min-w-0">
-          <Caption shape={[size, size]}>After ReLU</Caption>
+          <Caption shape={[size, size]}>{t.relu.after}</Caption>
           <PixelGrid
             data={after}
             range={range}
@@ -127,26 +129,25 @@ export function ReLUVisualizer() {
             >
               {verdict}
             </span>
-            <div className="grid grid-cols-3 gap-1" aria-label="Move highlighted pixel">
+            <div className="grid grid-cols-3 gap-1" aria-label={t.relu.move}>
               <span />
-              <Button size="sm" onClick={() => move(-1, 0)} aria-label="Up">
+              <Button size="sm" onClick={() => move(-1, 0)} aria-label={t.relu.up}>
                 ↑
               </Button>
               <span />
-              <Button size="sm" onClick={() => move(0, -1)} aria-label="Left">
+              <Button size="sm" onClick={() => move(0, -1)} aria-label={t.relu.left}>
                 ←
               </Button>
-              <Button size="sm" onClick={() => move(1, 0)} aria-label="Down">
+              <Button size="sm" onClick={() => move(1, 0)} aria-label={t.relu.down}>
                 ↓
               </Button>
-              <Button size="sm" onClick={() => move(0, 1)} aria-label="Right">
+              <Button size="sm" onClick={() => move(0, 1)} aria-label={t.relu.right}>
                 →
               </Button>
             </div>
           </div>
           <p className="text-xs leading-relaxed text-ink-3">
-            <span className="font-mono text-ink-2">{negatives}</span> of {size * size} values were
-            negative and became 0. Hover, click or use the arrow keys to inspect any pixel.
+            {t.relu.stats(negatives, size * size)}
           </p>
         </div>
       </div>

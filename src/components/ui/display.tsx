@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { formatShape } from '@/lib/tensor';
 
@@ -28,30 +29,16 @@ export function Card({
 
 export type TagKind = 'computed' | 'simulated' | 'illustrative';
 
-const TAGS: Record<TagKind, { label: string; title: string; className: string; dot: string }> = {
-  computed: {
-    label: 'Real computation',
-    title: 'These numbers are produced by the actual math implemented in this app.',
-    className: 'border-ok/30 text-ok',
-    dot: 'bg-ok',
-  },
-  simulated: {
-    label: 'Simplified simulation',
-    title: 'Real math on a deliberately tiny, simplified network — not a production CNN.',
-    className: 'border-warn/30 text-warn',
-    dot: 'bg-warn',
-  },
-  illustrative: {
-    label: 'Illustrative',
-    title: 'A conceptual picture to build intuition. Not computed by a trained network.',
-    className: 'border-accent/30 text-accent',
-    dot: 'bg-accent',
-  },
+const TAG_STYLES: Record<TagKind, { className: string; dot: string }> = {
+  computed: { className: 'border-ok/30 text-ok', dot: 'bg-ok' },
+  simulated: { className: 'border-warn/30 text-warn', dot: 'bg-warn' },
+  illustrative: { className: 'border-accent/30 text-accent', dot: 'bg-accent' },
 };
 
 /** Labels whether a visual shows real math, a simplified simulation, or an illustration. */
 export function Tag({ kind, children }: { kind: TagKind; children?: ReactNode }) {
-  const t = TAGS[kind];
+  const text = useT().tags[kind];
+  const t = { ...TAG_STYLES[kind], ...text };
   return (
     <span
       title={t.title}

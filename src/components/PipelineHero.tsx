@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { type ReactNode, useEffect, useState } from 'react';
 import { useForward } from '@/hooks/useNetwork';
 import { cx } from '@/lib/cx';
-import { CLASS_NAMES } from '@/lib/network';
+import { useT } from '@/i18n/context';
 import { argmax } from '@/lib/softmax';
 import { formatShape, maxAbs } from '@/lib/tensor';
 import { wrapVector } from '@/lib/views';
@@ -35,28 +35,30 @@ interface Stage {
 /** The animated "image → prediction" strip on the home page, computed live. */
 export function PipelineHero() {
   const r = useForward();
+  const t = useT();
+  const L = t.home.stages;
   const [active, setActive] = useState(0);
   const winner = argmax(r.probs);
 
   const stages: Stage[] = [
     {
-      label: 'Input',
+      label: L[0],
       shape: [28, 28, 1],
       visual: <PixelGrid data={r.input} scale="gray" cellSize={2.6} />,
     },
-    { label: 'Conv', shape: [26, 26, 8], visual: <Stack maps={r.conv1} cell={2.1} /> },
-    { label: 'ReLU', shape: [26, 26, 8], visual: <Stack maps={r.act1} cell={2.1} /> },
-    { label: 'Pool', shape: [13, 13, 8], visual: <Stack maps={r.pool1} cell={3.4} /> },
-    { label: 'Conv', shape: [11, 11, 16], visual: <Stack maps={r.conv2} cell={4} /> },
-    { label: 'ReLU', shape: [11, 11, 16], visual: <Stack maps={r.act2} cell={4} /> },
-    { label: 'Pool', shape: [5, 5, 16], visual: <Stack maps={r.pool2} cell={8} /> },
+    { label: L[1], shape: [26, 26, 8], visual: <Stack maps={r.conv1} cell={2.1} /> },
+    { label: L[2], shape: [26, 26, 8], visual: <Stack maps={r.act1} cell={2.1} /> },
+    { label: L[3], shape: [13, 13, 8], visual: <Stack maps={r.pool1} cell={3.4} /> },
+    { label: L[4], shape: [11, 11, 16], visual: <Stack maps={r.conv2} cell={4} /> },
+    { label: L[5], shape: [11, 11, 16], visual: <Stack maps={r.act2} cell={4} /> },
+    { label: L[6], shape: [5, 5, 16], visual: <Stack maps={r.pool2} cell={8} /> },
     {
-      label: 'Flatten',
+      label: L[7],
       shape: [400],
       visual: <PixelGrid data={wrapVector(r.flat, 16)} cellSize={2.6} />,
     },
     {
-      label: 'Dense',
+      label: L[8],
       shape: [4],
       visual: (
         <div className="flex flex-col gap-1.5">
@@ -79,7 +81,7 @@ export function PipelineHero() {
       ),
     },
     {
-      label: 'Softmax',
+      label: L[9],
       shape: [4],
       visual: (
         <div className="flex w-20 flex-col gap-1">
@@ -91,7 +93,7 @@ export function PipelineHero() {
                   i === winner ? 'font-semibold text-ink' : 'text-ink-3',
                 )}
               >
-                {CLASS_NAMES[i]}
+                {t.classes[i]}
               </span>
               <div className="h-2 flex-1 rounded-sm bg-surface-2">
                 <div

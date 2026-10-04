@@ -1,12 +1,8 @@
+import { useT } from '@/i18n/context';
 import { Button, Segmented } from './controls';
 import { PauseIcon, PlayIcon, ResetIcon, SkipIcon, StepBackIcon, StepIcon } from './Icons';
 
-const SPEEDS = [
-  { value: 1.5, label: 'Slow' },
-  { value: 5, label: 'Normal' },
-  { value: 20, label: 'Fast' },
-  { value: 80, label: 'Turbo' },
-];
+const SPEEDS = [1.5, 5, 20, 80];
 
 interface PlaybackControlsProps {
   playing: boolean;
@@ -31,6 +27,7 @@ export function PlaybackControls({
   position,
   total,
 }: PlaybackControlsProps) {
+  const t = useT();
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Button
@@ -40,44 +37,44 @@ export function PlaybackControls({
         icon={playing ? <PauseIcon /> : <PlayIcon />}
         className="w-20"
       >
-        {playing ? 'Pause' : 'Play'}
+        {playing ? t.common.pause : t.common.play}
       </Button>
       <Button
         size="sm"
         onClick={() => onStep(-1)}
         icon={<StepBackIcon />}
-        title="Previous position"
-        aria-label="Previous position"
+        title={t.playback.prev}
+        aria-label={t.playback.prev}
       />
       <Button
         size="sm"
         onClick={() => onStep(1)}
         icon={<StepIcon />}
-        title="Next position"
-        aria-label="Next position"
+        title={t.playback.next}
+        aria-label={t.playback.next}
       />
       <Button
         size="sm"
         onClick={onFinish}
         icon={<SkipIcon />}
-        title="Compute everything"
-        aria-label="Compute everything"
+        title={t.playback.finish}
+        aria-label={t.playback.finish}
       />
       <Button
         size="sm"
         onClick={onReset}
         icon={<ResetIcon />}
-        title="Back to start"
-        aria-label="Back to start"
+        title={t.playback.restart}
+        aria-label={t.playback.restart}
       />
       <Segmented
-        aria-label="Animation speed"
+        aria-label={t.playback.speed}
         value={speed}
-        options={SPEEDS}
+        options={SPEEDS.map((value, i) => ({ value, label: t.playback.speeds[i] }))}
         onChange={onSpeedChange}
       />
       <span className="ml-auto font-mono text-xs text-ink-3 tabular-nums">
-        step {position + 1} / {total}
+        {t.playback.step(position + 1, total)}
       </span>
     </div>
   );

@@ -4,6 +4,7 @@ import { useImage } from '@/context/image';
 import { useTheme } from '@/context/theme';
 import { KERNEL_PRESETS, KERNEL_SIZES, type KernelPresetId, makeKernel } from '@/data/kernels';
 import { useStepper } from '@/hooks/useStepper';
+import { useT } from '@/i18n/context';
 import { css, textOn, valueColor } from '@/lib/colors';
 import { convOutputSize, convolutionStep, convolve2d } from '@/lib/convolution';
 import { cx } from '@/lib/cx';
@@ -22,6 +23,7 @@ type PresetChoice = KernelPresetId | 'custom';
 export function ConvolutionVisualizer() {
   const { image } = useImage();
   const { theme } = useTheme();
+  const t = useT();
   const [preset, setPreset] = useState<PresetChoice>('vertical');
   const [kernel, setKernel] = useState<Matrix>(() => makeKernel('vertical', 3));
   const [stride, setStride] = useState(1);
@@ -84,36 +86,39 @@ export function ConvolutionVisualizer() {
     <Card>
       <div className="flex flex-col gap-4 border-b border-line p-4">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.4fr_auto_auto_auto]">
-          <Field label="Kernel">
+          <Field label={t.common.kernel}>
             <Select<PresetChoice>
-              aria-label="Kernel preset"
+              aria-label={t.conv.preset}
               value={preset}
               onChange={(id) => choosePreset(id)}
               options={[
-                ...KERNEL_PRESETS.map((p) => ({ value: p.id as PresetChoice, label: p.label })),
-                { value: 'custom', label: 'Custom (edited)' },
+                ...KERNEL_PRESETS.map((id) => ({
+                  value: id as PresetChoice,
+                  label: t.kernels[id],
+                })),
+                { value: 'custom', label: t.customKernel },
               ]}
             />
           </Field>
-          <Field label="Kernel size">
+          <Field label={t.common.kernelSize}>
             <Segmented
-              aria-label="Kernel size"
+              aria-label={t.common.kernelSize}
               value={k}
               onChange={changeSize}
               options={KERNEL_SIZES.map((s) => ({ value: s, label: `${s}×${s}` }))}
             />
           </Field>
-          <Field label="Stride">
+          <Field label={t.common.stride}>
             <Segmented
-              aria-label="Stride"
+              aria-label={t.common.stride}
               value={stride}
               onChange={setStride}
               options={[1, 2, 3].map((s) => ({ value: s, label: String(s) }))}
             />
           </Field>
-          <Field label="Padding">
+          <Field label={t.common.padding}>
             <Segmented
-              aria-label="Padding"
+              aria-label={t.common.padding}
               value={padding}
               onChange={setPadding}
               options={[0, 1, 2].map((p) => ({ value: p, label: String(p) }))}
@@ -137,7 +142,8 @@ export function ConvolutionVisualizer() {
         {/* 1. Input with the sliding window */}
         <div className="min-w-0">
           <Caption shape={[image.length + 2 * padding, image.length + 2 * padding]}>
-            Input{padding > 0 && <span className="text-ink-3"> + {padding}px zero padding</span>}
+            {t.common.input}
+            {padding > 0 && <span className="text-ink-3"> {t.conv.zeroPadding(padding)}</span>}
           </Caption>
           <PixelGrid
             data={padded}
@@ -147,15 +153,15 @@ export function ConvolutionVisualizer() {
             highlights={inputHighlights}
             smooth={speed <= 20}
             onSelect={selectInput}
-            label="Input image with the kernel window"
+            label={t.conv.inputLabel}
           />
-          <p className="mt-2 text-xs text-ink-3">Click anywhere to move the kernel there.</p>
+          <p className="mt-2 text-xs text-ink-3">{t.conv.clickHint}</p>
         </div>
 
         {/* 2. Kernel and the arithmetic for the current position */}
         <div className="flex min-w-0 flex-col gap-4">
           <div>
-            <Caption shape={[k, k]}>Kernel weights · editable</Caption>
+            <Caption shape={[k, k]}>{t.conv.weights}</Caption>
             <KernelEditor
               kernel={kernel}
               onChange={(next) => {
@@ -169,9 +175,7 @@ export function ConvolutionVisualizer() {
             />
           </div>
           <div>
-            <Caption>
-              Position ({i}, {j}) · input × weight
-            </Caption>
+            <Caption>{t.conv.position(i, j)}</Caption>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key={animateCells ? `${stepper.index}-${k}` : 'static'}
@@ -200,7 +204,7 @@ export function ConvolutionVisualizer() {
                         style={{ background: css(color), color: textOn(color) }}
                       >
                         <span className="opacity-75">
-                          {step.isPadding[m][n] ? 'pad' : fmt(step.patch[m][n], 2)}×
+                          {step.isPadding[m][n] ? t.conv.pad : fmt(step.patch[m][n], 2)}×
                           {fmt(kernel[m][n], 2)}
                         </span>
                         <span className="font-medium">{fmt(p, 2)}</span>
@@ -240,7 +244,7 @@ export function ConvolutionVisualizer() {
 
         {/* 3. The feature map filling in */}
         <div className="min-w-0">
-          <Caption shape={[outRows, outCols]}>Output feature map</Caption>
+          <Caption shape={[outRows, outCols]}>{t.conv.output}</Caption>
           <PixelGrid
             data={output}
             scale="diverging"
@@ -250,7 +254,7 @@ export function ConvolutionVisualizer() {
             highlights={[{ row: i, col: j, tone: 'accent' }]}
             smooth={speed <= 20}
             onSelect={({ row, col }) => stepper.goTo(row * outCols + col)}
-            label="Output feature map"
+            label={t.conv.output}
           />
           <div className="mt-3 flex flex-col gap-2 text-xs text-ink-3">
             <div className="flex items-center gap-2">
@@ -260,10 +264,10 @@ export function ConvolutionVisualizer() {
                   background: 'linear-gradient(90deg, var(--neg), var(--surface-2), var(--pos))',
                 }}
               />
-              <span>negative · 0 · positive</span>
+              <span>{t.conv.legend}</span>
             </div>
             <div>
-              Output size: <span className="font-mono text-ink-2">{sizeFormula}</span>
+              {t.conv.outputSize} <span className="font-mono text-ink-2">{sizeFormula}</span>
             </div>
           </div>
         </div>

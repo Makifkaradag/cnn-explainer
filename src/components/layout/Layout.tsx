@@ -2,15 +2,9 @@ import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { REPO_URL } from '@/config';
 import { useTheme } from '@/context/theme';
+import { type Lang, useI18n, useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { CloseIcon, GithubIcon, MenuIcon, MoonIcon, SunIcon } from '../ui/Icons';
-
-const NAV = [
-  { to: '/explore', label: 'Explore' },
-  { to: '/playground', label: 'Playground' },
-  { to: '/training', label: 'Training' },
-  { to: '/concepts', label: 'Under the hood' },
-];
 
 export function Logo({ className }: { className?: string }) {
   return (
@@ -40,13 +34,15 @@ export function Logo({ className }: { className?: string }) {
 
 function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const t = useT();
+  const label = theme === 'dark' ? t.nav.toLight : t.nav.toDark;
   return (
     <button
       type="button"
       onClick={toggleTheme}
       className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-ink-2 transition hover:bg-surface-2 hover:text-ink"
-      aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={theme === 'dark' ? 'Light mode' : 'Dark mode'}
+      aria-label={label}
+      title={label}
     >
       {theme === 'dark' ? (
         <SunIcon className="size-[18px]" />
@@ -57,7 +53,47 @@ function ThemeToggle() {
   );
 }
 
+const LANGS: { value: Lang; label: string; name: string }[] = [
+  { value: 'en', label: 'EN', name: 'English' },
+  { value: 'tr', label: 'TR', name: 'Türkçe' },
+];
+
+function LanguageSwitch() {
+  const { lang, setLang, t } = useI18n();
+  return (
+    <div
+      role="radiogroup"
+      aria-label={t.nav.language}
+      className="flex items-center rounded-lg border border-line bg-surface-2 p-0.5"
+    >
+      {LANGS.map((l) => {
+        const active = l.value === lang;
+        return (
+          <button
+            key={l.value}
+            type="button"
+            role="radio"
+            aria-checked={active}
+            title={l.name}
+            lang={l.value}
+            onClick={() => setLang(l.value)}
+            className={cx(
+              'h-7 cursor-pointer rounded-md px-2 font-mono text-[11px] font-medium transition',
+              active
+                ? 'bg-surface text-ink shadow-sm ring-1 ring-line'
+                : 'text-ink-3 hover:text-ink',
+            )}
+          >
+            {l.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Header() {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const [lastPath, setLastPath] = useState(pathname);
@@ -66,6 +102,13 @@ function Header() {
     setLastPath(pathname);
     setOpen(false);
   }
+
+  const nav = [
+    { to: '/explore', label: t.nav.explore },
+    { to: '/playground', label: t.nav.playground },
+    { to: '/training', label: t.nav.training },
+    { to: '/concepts', label: t.nav.concepts },
+  ];
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cx(
@@ -76,24 +119,26 @@ function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
+        <Link to="/" className="flex shrink-0 items-center gap-2.5 font-semibold tracking-tight">
           <Logo className="size-7" />
-          <span>CNN Explainer</span>
+          <span className="hidden min-[400px]:inline">CNN Explainer</span>
         </Link>
         <nav className="ml-4 hidden items-center gap-1 md:flex">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink key={n.to} to={n.to} className={linkClass}>
               {n.label}
             </NavLink>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1">
+          <LanguageSwitch />
           <a
             href={REPO_URL}
             target="_blank"
             rel="noreferrer"
             className="flex size-9 items-center justify-center rounded-lg text-ink-2 transition hover:bg-surface-2 hover:text-ink"
-            aria-label="Source code on GitHub"
+            aria-label={t.nav.github}
+            title={t.nav.github}
           >
             <GithubIcon className="size-[18px]" />
           </a>
@@ -102,7 +147,7 @@ function Header() {
             type="button"
             className="flex size-9 cursor-pointer items-center justify-center rounded-lg text-ink-2 md:hidden"
             onClick={() => setOpen((o) => !o)}
-            aria-label="Menu"
+            aria-label={t.nav.menu}
             aria-expanded={open}
           >
             {open ? <CloseIcon className="size-5" /> : <MenuIcon className="size-5" />}
@@ -111,7 +156,7 @@ function Header() {
       </div>
       {open && (
         <nav className="flex flex-col gap-1 border-t border-line px-4 py-3 md:hidden">
-          {NAV.map((n) => (
+          {nav.map((n) => (
             <NavLink key={n.to} to={n.to} className={linkClass}>
               {n.label}
             </NavLink>
@@ -123,17 +168,15 @@ function Header() {
 }
 
 function Footer() {
+  const t = useT();
   return (
     <footer className="mt-24 border-t border-line">
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-ink-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2">
           <Logo className="size-5" />
-          <span>CNN Explainer — runs entirely in your browser.</span>
+          <span>{t.footer.tagline}</span>
         </div>
-        <div className="max-w-xl text-xs leading-relaxed">
-          Convolution, activation, pooling and softmax are real implementations. The network itself
-          is a tiny educational model, not a production classifier.
-        </div>
+        <div className="max-w-xl text-xs leading-relaxed">{t.footer.note}</div>
       </div>
     </footer>
   );
@@ -148,13 +191,18 @@ function ScrollToTop() {
 }
 
 export function Layout() {
+  const t = useT();
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />
       <Header />
       <main className="flex-1">
         <Suspense
-          fallback={<div className="mx-auto max-w-7xl px-6 py-24 text-sm text-ink-3">Loading…</div>}
+          fallback={
+            <div className="mx-auto max-w-7xl px-6 py-24 text-sm text-ink-3">
+              {t.common.loading}
+            </div>
+          }
         >
           <Outlet />
         </Suspense>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useTheme } from '@/context/theme';
 import { useForward } from '@/hooks/useNetwork';
+import { useT } from '@/i18n/context';
 import { css, valueColor } from '@/lib/colors';
 import { cx } from '@/lib/cx';
 import { CLASS_NAMES } from '@/lib/network';
@@ -19,6 +20,7 @@ type Focus = { side: 'in'; index: number } | { side: 'out'; index: number } | nu
 /** Chapter 8b: a fully connected layer, drawn with a representative subset of connections. */
 export function DenseVisualizer() {
   const { theme } = useTheme();
+  const t = useT();
   const { flat, logits } = useForward();
   const { W: weights, b } = getTrainedModel().dense;
   const [focus, setFocus] = useState<Focus>({
@@ -58,12 +60,7 @@ export function DenseVisualizer() {
     <Card>
       <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <svg
-            viewBox={`0 0 ${W} ${H}`}
-            className="w-full"
-            role="img"
-            aria-label="Dense layer connections"
-          >
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={t.dense.aria}>
             {inputs.flatMap(({ i }, a) =>
               CLASS_NAMES.map((_, k) => {
                 const w = weights[k][i];
@@ -113,9 +110,9 @@ export function DenseVisualizer() {
               );
             })}
             <text x={X_IN - 4} y={H - 12} textAnchor="middle" className="fill-ink-3 text-[11px]">
-              ⋮ 388 more inputs
+              {t.dense.more}
             </text>
-            {CLASS_NAMES.map((name, k) => {
+            {t.classes.map((name, k) => {
               const active = focus?.side === 'out' && focus.index === k;
               return (
                 <g
@@ -148,13 +145,10 @@ export function DenseVisualizer() {
           </svg>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-3">
             <span>
-              <span className="text-pos">━</span> positive weight ·{' '}
-              <span className="text-neg">━</span> negative weight · thickness = |w|
+              <span className="text-pos">━</span> {t.dense.legendPos} ·{' '}
+              <span className="text-neg">━</span> {t.dense.legendNeg} · {t.dense.thickness}
             </span>
-            <span>
-              Showing the {SHOWN_INPUTS} most active of 400 inputs ({SHOWN_INPUTS * 4} of 1,600
-              weights).
-            </span>
+            <span>{t.dense.showing}</span>
           </div>
         </div>
 
@@ -169,13 +163,13 @@ export function DenseVisualizer() {
           {breakdown ? (
             <div className="flex flex-col gap-1.5 font-mono text-xs">
               <div className="mb-1 font-sans text-xs font-medium text-ink-2">
-                How the {CLASS_NAMES[breakdown.k]} logit adds up (all 400 inputs)
+                {t.dense.adds(t.classes[breakdown.k])}
               </div>
-              <Row label="bias" value={b[breakdown.k]} />
+              <Row label={t.dense.bias} value={b[breakdown.k]} />
               {breakdown.top.map((t) => (
                 <Row key={t.i} label={`w·x${t.i} = ${fmt(t.w, 2)}·${fmt(t.x, 2)}`} value={t.c} />
               ))}
-              <Row label="395 other terms" value={breakdown.rest} />
+              <Row label={t.dense.others} value={breakdown.rest} />
               <div className="mt-1 flex justify-between border-t border-line pt-1.5 text-[13px] text-ink">
                 <span>z = </span>
                 <span>{fmt(logits[breakdown.k], 3)}</span>
@@ -185,9 +179,9 @@ export function DenseVisualizer() {
             focus?.side === 'in' && (
               <div className="flex flex-col gap-1.5 font-mono text-xs">
                 <div className="mb-1 font-sans text-xs font-medium text-ink-2">
-                  Input x{focus.index} = {fmt(flat[focus.index], 3)} feeds every neuron
+                  {t.dense.feeds(focus.index, fmt(flat[focus.index], 3))}
                 </div>
-                {CLASS_NAMES.map((name, k) => (
+                {t.classes.map((name, k) => (
                   <Row
                     key={name}
                     label={`${name}: w = ${fmt(weights[k][focus.index], 3)}`}
@@ -197,11 +191,7 @@ export function DenseVisualizer() {
               </div>
             )
           )}
-          <p className="text-xs leading-relaxed text-ink-3">
-            Hover a neuron or an input. Every output neuron is connected to all 400 inputs — that is
-            what “fully connected” means. These weights were trained in your browser on synthetic
-            shapes.
-          </p>
+          <p className="text-xs leading-relaxed text-ink-3">{t.dense.hint}</p>
         </div>
       </div>
     </Card>

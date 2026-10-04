@@ -2,6 +2,7 @@ import { LayoutGroup, motion } from 'motion/react';
 import { useState } from 'react';
 import { useTheme } from '@/context/theme';
 import { useForward } from '@/hooks/useNetwork';
+import { useT } from '@/i18n/context';
 import { css, valueColor } from '@/lib/colors';
 import { maxAbs } from '@/lib/tensor';
 import { wrapVector } from '@/lib/views';
@@ -15,6 +16,7 @@ const ANIMATED_CHANNELS = 3;
 /** Chapter 8a: feature maps are unrolled into one long vector. */
 export function FlattenVisualizer() {
   const { theme } = useTheme();
+  const t = useT();
   const { pool2, flat } = useForward();
   const [flattened, setFlattened] = useState(false);
   const range = maxAbs(pool2);
@@ -39,10 +41,10 @@ export function FlattenVisualizer() {
       <div className="flex flex-col gap-5 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Caption shape={flattened ? [ANIMATED_CHANNELS * 25] : [5, 5, ANIMATED_CHANNELS]}>
-            {flattened ? 'Vector (first 3 maps)' : 'First 3 of 16 pooled feature maps'}
+            {flattened ? t.flatten.vectorFirst : t.flatten.firstMaps}
           </Caption>
           <Button variant="primary" size="sm" onClick={() => setFlattened((f) => !f)}>
-            {flattened ? 'Un-flatten' : 'Flatten'}
+            {flattened ? t.flatten.unflatten : t.flatten.flatten}
           </Button>
         </div>
 
@@ -61,7 +63,9 @@ export function FlattenVisualizer() {
                     <div className="grid grid-cols-5 gap-0.5">
                       {m.flat().map((v, idx) => cell(ch, idx, v))}
                     </div>
-                    <div className="mt-1 text-center text-[11px] text-ink-3">map {ch + 1}</div>
+                    <div className="mt-1 text-center text-[11px] text-ink-3">
+                      {t.flatten.map(ch + 1)}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -71,7 +75,7 @@ export function FlattenVisualizer() {
 
         <div className="grid gap-5 border-t border-line pt-4 md:grid-cols-[auto_minmax(0,1fr)]">
           <div>
-            <Caption shape={[5, 5, 16]}>All 16 maps</Caption>
+            <Caption shape={[5, 5, 16]}>{t.flatten.allMaps}</Caption>
             <FeatureMapStack
               maps={pool2}
               cellSize={4}
@@ -80,13 +84,9 @@ export function FlattenVisualizer() {
             />
           </div>
           <div className="min-w-0">
-            <Caption shape={[flat.length]}>Flattened vector</Caption>
+            <Caption shape={[flat.length]}>{t.flatten.vector}</Caption>
             <PixelGrid data={wrapVector(flat, 25)} cellSize={11} />
-            <p className="mt-2 text-xs leading-relaxed text-ink-3">
-              Row <span className="font-mono">c</span> holds map{' '}
-              <span className="font-mono">c</span>, read left-to-right, top-to-bottom. Flatten does
-              no math — it only changes the shape from 5×5×16 to 400 so a Dense layer can use it.
-            </p>
+            <p className="mt-2 text-xs leading-relaxed text-ink-3">{t.flatten.note}</p>
           </div>
         </div>
       </div>

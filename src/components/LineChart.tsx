@@ -1,3 +1,4 @@
+import { useT } from '@/i18n/context';
 import { fmt } from '@/lib/tensor';
 
 export interface Series {
@@ -31,6 +32,7 @@ export function LineChart({
   label,
   lastX,
 }: LineChartProps) {
+  const t = useT();
   const H = height;
   const n = Math.max(2, ...series.map((s) => s.values.length));
   const all = series.flatMap((s) => s.values);
@@ -66,7 +68,7 @@ export function LineChart({
           );
         })}
         <text x={W - PAD.r} y={H - 4} textAnchor="end" className="fill-ink-3 font-mono text-[9px]">
-          iteration {lastX ?? Math.max(0, n - 1)}
+          {t.common.iteration} {lastX ?? Math.max(0, n - 1)}
         </text>
         {series.map((s) => {
           if (s.values.length === 0) return null;

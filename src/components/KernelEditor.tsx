@@ -1,5 +1,6 @@
 import { type CSSProperties, useState } from 'react';
 import { useTheme } from '@/context/theme';
+import { useT } from '@/i18n/context';
 import { css, textOn, valueColor } from '@/lib/colors';
 import { cx } from '@/lib/cx';
 import { fmt, maxAbs } from '@/lib/tensor';
@@ -74,6 +75,7 @@ export function KernelEditor({
   readOnly = false,
 }: KernelEditorProps) {
   const { theme } = useTheme();
+  const t = useT();
   const k = kernel.length;
   const range = Math.max(maxAbs(kernel), 1e-6);
 
@@ -105,7 +107,7 @@ export function KernelEditor({
             return (
               <div key={`${r}-${c}`} onMouseEnter={() => onHoverCell?.({ row: r, col: c })}>
                 <NumberCell
-                  label={`Kernel weight row ${r + 1} column ${c + 1}`}
+                  label={t.kernelEditor.weight(r + 1, c + 1)}
                   value={v}
                   onCommit={(n) => setCell(r, c, n)}
                   className={cx(
@@ -122,11 +124,11 @@ export function KernelEditor({
       {onBiasChange && bias !== undefined && (
         <label className="flex items-center gap-2 text-xs text-ink-2">
           <span>
-            bias <span className="math">b</span>
+            {t.kernelEditor.bias} <span className="math">b</span>
           </span>
           <div className="w-16">
             <NumberCell
-              label="Bias"
+              label={t.kernelEditor.bias}
               value={bias}
               onCommit={onBiasChange}
               className="h-8 border border-line bg-surface text-ink"

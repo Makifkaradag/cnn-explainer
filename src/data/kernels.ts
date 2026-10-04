@@ -11,23 +11,17 @@ export type KernelPresetId =
   | 'blur'
   | 'texture';
 
-export interface KernelPreset {
-  id: KernelPresetId;
-  label: string;
-  /** What the filter responds to, in a few words. */
-  hint: string;
-}
-
-export const KERNEL_PRESETS: KernelPreset[] = [
-  { id: 'edge', label: 'Edge detection', hint: 'Outlines in every direction' },
-  { id: 'vertical', label: 'Vertical edge', hint: 'Left/right brightness changes' },
-  { id: 'horizontal', label: 'Horizontal edge', hint: 'Top/bottom brightness changes' },
-  { id: 'diagonal', label: 'Diagonal edge ↘', hint: 'Edges running top-left → bottom-right' },
-  { id: 'antiDiagonal', label: 'Diagonal edge ↗', hint: 'Edges running bottom-left → top-right' },
-  { id: 'sharpen', label: 'Sharpen', hint: 'Boosts a pixel relative to its neighbours' },
-  { id: 'blur', label: 'Blur', hint: 'Averages the neighbourhood' },
-  { id: 'texture', label: 'Texture (checker)', hint: 'Fine alternating patterns' },
-  { id: 'identity', label: 'Identity', hint: 'Copies the input unchanged' },
+/** Preset order shown in menus. Display names live in the i18n dictionaries. */
+export const KERNEL_PRESETS: KernelPresetId[] = [
+  'edge',
+  'vertical',
+  'horizontal',
+  'diagonal',
+  'antiDiagonal',
+  'sharpen',
+  'blur',
+  'texture',
+  'identity',
 ];
 
 export const KERNEL_SIZES = [3, 5] as const;
@@ -67,8 +61,4 @@ export function makeKernel(id: KernelPresetId, size: number): Matrix {
     case 'texture':
       return build(size, (i, j) => ((i + j) % 2 === 0 ? 1 : -1));
   }
-}
-
-export function presetLabel(id: KernelPresetId | 'custom'): string {
-  return id === 'custom' ? 'Custom' : (KERNEL_PRESETS.find((p) => p.id === id)?.label ?? id);
 }

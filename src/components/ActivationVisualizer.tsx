@@ -1,3 +1,4 @@
+import { useT } from '@/i18n/context';
 import { ACTIVATIONS } from '@/lib/activations';
 import { cx } from '@/lib/cx';
 import { fmt } from '@/lib/tensor';
@@ -26,6 +27,7 @@ export function ActivationPlot({
   showLabel = true,
 }: ActivationPlotProps) {
   const info = ACTIVATIONS[name];
+  const formula = useT().activationFormulas[name];
   const [yMin, yMax] = name === 'relu' || name === 'leakyRelu' ? [-1, domain] : info.plotRange;
   const sx = (v: number) => PAD + ((v + domain) / (2 * domain)) * (W - 2 * PAD);
   const sy = (v: number) => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - 2 * PAD);
@@ -45,7 +47,7 @@ export function ActivationPlot({
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
         role="img"
-        aria-label={`${info.label}: ${info.formula}`}
+        aria-label={`${info.label}: ${formula}`}
       >
         {/* axes */}
         <line
@@ -116,7 +118,7 @@ export function ActivationPlot({
       {showLabel && (
         <figcaption className="mt-1 flex items-baseline justify-between gap-2 text-xs">
           <span className="font-medium text-ink">{info.label}</span>
-          <span className="font-serif text-ink-2 italic">{info.formula}</span>
+          <span className="font-serif text-ink-2 italic">{formula}</span>
         </figcaption>
       )}
     </figure>

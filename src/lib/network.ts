@@ -131,10 +131,6 @@ export interface LayerSpec {
   shapeIn: number[];
   shapeOut: number[];
   params: number;
-  /** One-line description of the operation. */
-  op: string;
-  /** Short explanation shown in the architecture inspector. */
-  explain: string;
 }
 
 const C1 = CONV1_FILTERS.length;
@@ -148,9 +144,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [28, 28, 1],
     shapeOut: [28, 28, 1],
     params: 0,
-    op: 'Grayscale image',
-    explain:
-      'A 28×28 grid of brightness values in [0, 1]. One channel because the image is grayscale (a colour image would have 3).',
   },
   {
     id: 'conv1',
@@ -159,8 +152,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [28, 28, 1],
     shapeOut: [26, 26, C1],
     params: convParamCount(3, 1, C1),
-    op: `${C1} filters · 3×3 · stride 1 · no padding`,
-    explain: `Each of the ${C1} filters slides over the image and produces its own feature map. Without padding, a 3×3 window fits 26 times across 28 pixels.`,
   },
   {
     id: 'act1',
@@ -169,9 +160,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [26, 26, C1],
     shapeOut: [26, 26, C1],
     params: 0,
-    op: 'max(0, x) element-wise',
-    explain:
-      'Applied to every value independently, so the shape is unchanged. Negative responses are clipped to 0.',
   },
   {
     id: 'pool1',
@@ -180,9 +168,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [26, 26, C1],
     shapeOut: [13, 13, C1],
     params: 0,
-    op: '2×2 window · stride 2',
-    explain:
-      'Keeps the strongest response in each 2×2 block, halving width and height. Each channel is pooled separately.',
   },
   {
     id: 'conv2',
@@ -191,8 +176,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [13, 13, C1],
     shapeOut: [11, 11, C2],
     params: convParamCount(3, C1, C2),
-    op: `${C2} filters · 3×3×${C1} · stride 1`,
-    explain: `Every filter now spans all ${C1} input channels (3×3×${C1} weights), so it can combine edges into more complex patterns.`,
   },
   {
     id: 'act2',
@@ -201,9 +184,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [11, 11, C2],
     shapeOut: [11, 11, C2],
     params: 0,
-    op: 'max(0, x) element-wise',
-    explain:
-      'Same non-linearity as before. Without it, stacked convolutions would collapse into a single linear operation.',
   },
   {
     id: 'pool2',
@@ -212,9 +192,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [11, 11, C2],
     shapeOut: [5, 5, C2],
     params: 0,
-    op: '2×2 window · stride 2',
-    explain:
-      '11 is odd, so the last row and column do not fit a full window and are dropped: ⌊(11 − 2) / 2⌋ + 1 = 5.',
   },
   {
     id: 'flat',
@@ -223,8 +200,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [5, 5, C2],
     shapeOut: [5 * 5 * C2],
     params: 0,
-    op: 'Reshape to a vector',
-    explain: `No computation — the ${C2} maps of 5×5 are laid out end to end as a list of ${5 * 5 * C2} numbers.`,
   },
   {
     id: 'logits',
@@ -233,8 +208,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [5 * 5 * C2],
     shapeOut: [CLASS_NAMES.length],
     params: (5 * 5 * C2 + 1) * CLASS_NAMES.length,
-    op: `${CLASS_NAMES.length} neurons, fully connected`,
-    explain: `Each output neuron computes a weighted sum of all ${5 * 5 * C2} inputs plus a bias. The results are called logits.`,
   },
   {
     id: 'probs',
@@ -243,8 +216,6 @@ export const LAYERS: LayerSpec[] = [
     shapeIn: [CLASS_NAMES.length],
     shapeOut: [CLASS_NAMES.length],
     params: 0,
-    op: 'exp(zᵢ) / Σ exp(zⱼ)',
-    explain: 'Turns the logits into probabilities that are positive and sum to 1.',
   },
 ];
 

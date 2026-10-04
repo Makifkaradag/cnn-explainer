@@ -1,4 +1,4 @@
-import { CLASS_NAMES } from '@/lib/network';
+import { useT } from '@/i18n/context';
 import { type TensorValue, wrapVector } from '@/lib/views';
 import { Bars } from './Bars';
 import { FeatureMapStack } from './FeatureMap';
@@ -12,6 +12,7 @@ export function TensorView({
   tensor: TensorValue;
   compact?: boolean;
 }) {
+  const t = useT();
   switch (tensor.kind) {
     case 'image':
       return <PixelGrid data={tensor.value} scale="gray" cellSize={compact ? 5 : 8} />;
@@ -30,8 +31,8 @@ export function TensorView({
         </div>
       );
     case 'logits':
-      return <Bars labels={CLASS_NAMES} values={tensor.value} kind="signed" />;
+      return <Bars labels={t.classes} values={tensor.value} kind="signed" />;
     case 'probs':
-      return <Bars labels={CLASS_NAMES} values={tensor.value} />;
+      return <Bars labels={t.classes} values={tensor.value} />;
   }
 }

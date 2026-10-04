@@ -1,6 +1,7 @@
 import { type ChangeEvent, type DragEvent, useRef, useState } from 'react';
 import { useImage } from '@/context/image';
 import { EXAMPLE_IMAGES } from '@/data/examples';
+import { sourceLabel, useT } from '@/i18n/context';
 import { cx } from '@/lib/cx';
 import { imageToMatrix, loadImage } from '@/lib/image';
 import { fmt } from '@/lib/tensor';
@@ -15,6 +16,7 @@ type Mode = 'examples' | 'draw' | 'upload';
 /** Thumbnail buttons for the built-in examples. Shared with the Playground. */
 export function ExamplePicker({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const { source, setExample } = useImage();
+  const t = useT();
   return (
     <div className="flex flex-wrap gap-2">
       {EXAMPLE_IMAGES.map((ex) => {
@@ -25,7 +27,7 @@ export function ExamplePicker({ size = 'md' }: { size?: 'sm' | 'md' }) {
             type="button"
             onClick={() => setExample(ex.id)}
             aria-pressed={active}
-            title={ex.label}
+            title={t.examples[ex.id]}
             className={cx(
               'flex cursor-pointer flex-col items-center gap-1 rounded-lg border p-1.5 transition',
               active ? 'border-accent bg-accent-soft' : 'border-line hover:border-line-strong',
@@ -37,7 +39,7 @@ export function ExamplePicker({ size = 'md' }: { size?: 'sm' | 'md' }) {
               cellSize={size === 'sm' ? 1.5 : 2}
               className="ring-0"
             />
-            {size === 'md' && <span className="text-[11px] text-ink-2">{ex.label}</span>}
+            {size === 'md' && <span className="text-[11px] text-ink-2">{t.examples[ex.id]}</span>}
           </button>
         );
       })}
@@ -47,6 +49,7 @@ export function ExamplePicker({ size = 'md' }: { size?: 'sm' | 'md' }) {
 
 function Uploader() {
   const { source, setImage } = useImage();
+  const t = useT();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -54,7 +57,7 @@ function Uploader() {
   const handleFile = async (file: File | undefined) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      setError('Please choose an image file (PNG, JPG, GIF, WebP…).');
+      setError(t.input.notImage);
       return;
     }
     try {
@@ -63,8 +66,8 @@ function Uploader() {
       if (source.kind === 'upload') URL.revokeObjectURL(source.previewUrl);
       setImage(matrix, { kind: 'upload', label: file.name, previewUrl: url, inverted });
       setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not load the image.');
+    } catch {
+      setError(t.input.loadError);
     }
   };
 
@@ -87,9 +90,9 @@ function Uploader() {
         )}
       >
         <UploadIcon className="size-6 text-ink-3" />
-        <div className="text-sm text-ink-2">Drop an image here, or</div>
+        <div className="text-sm text-ink-2">{t.input.drop}</div>
         <Button size="sm" variant="primary" onClick={() => inputRef.current?.click()}>
-          Choose a file
+          {t.input.chooseFile}
         </Button>
         <input
           ref={inputRef}
@@ -103,11 +106,7 @@ function Uploader() {
         />
       </div>
       {error && <p className="text-xs text-warn">{error}</p>}
-      <p className="text-xs leading-relaxed text-ink-3">
-        Your image never leaves the browser. It is centre-cropped, resized to 28×28 and converted to
-        grayscale. Light backgrounds are inverted so the shape is bright on dark, like the training
-        data.
-      </p>
+      <p className="text-xs leading-relaxed text-ink-3">{t.input.privacy}</p>
     </div>
   );
 }
@@ -115,6 +114,7 @@ function Uploader() {
 /** Chapter 1: choose, draw or upload the input image and inspect its pixel values. */
 export function ImageInput() {
   const { image, source, setImage, reset } = useImage();
+  const t = useT();
   const [mode, setMode] = useState<Mode>(
     source.kind === 'drawing' ? 'draw' : source.kind === 'upload' ? 'upload' : 'examples',
   );
@@ -127,29 +127,29 @@ export function ImageInput() {
   return (
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
       <Card
-        title="Choose an input"
+        title={t.input.chooseTitle}
         aside={
           <Button size="sm" variant="ghost" onClick={reset} icon={<ResetIcon />}>
-            Reset
+            {t.common.reset}
           </Button>
         }
       >
         <div className="flex flex-col gap-4 p-4">
           <Segmented
-            aria-label="Input source"
+            aria-label={t.input.sourceLabel}
             value={mode}
             onChange={setMode}
             options={[
-              { value: 'examples', label: 'Examples' },
-              { value: 'draw', label: 'Draw' },
-              { value: 'upload', label: 'Upload' },
+              { value: 'examples', label: t.common.examples },
+              { value: 'draw', label: t.common.draw },
+              { value: 'upload', label: t.common.upload },
             ]}
           />
           {mode === 'examples' && <ExamplePicker />}
           {mode === 'draw' && (
             <DrawPad
               initial={source.kind === 'drawing' ? image : undefined}
-              onCommit={(m) => setImage(m, { kind: 'drawing', label: 'Your drawing' })}
+              onCommit={(m) => setImage(m, { kind: 'drawing', label: t.common.yourDrawing })}
             />
           )}
           {mode === 'upload' && <Uploader />}
@@ -157,40 +157,38 @@ export function ImageInput() {
       </Card>
 
       <Card
-        title="What the network sees"
-        aside={<span className="text-xs text-ink-3">{source.label}</span>}
+        title={t.input.seesTitle}
+        aside={<span className="text-xs text-ink-3">{sourceLabel(source, t)}</span>}
       >
         <div className="grid gap-5 p-4 sm:grid-cols-[auto_minmax(0,1fr)]">
           {source.kind === 'upload' && (
             <div className="sm:col-span-2 flex items-center gap-4">
               <img
                 src={source.previewUrl}
-                alt="Original upload"
+                alt={t.input.original}
                 className="size-24 rounded-md object-cover ring-1 ring-line"
               />
               <div className="text-xs leading-relaxed text-ink-2">
-                <div className="font-medium text-ink">Original → grayscale</div>
+                <div className="font-medium text-ink">{t.input.originalToGray}</div>
                 gray = 0.299·R + 0.587·G + 0.114·B
-                {source.inverted && (
-                  <div className="text-ink-3">Inverted (light background detected)</div>
-                )}
+                {source.inverted && <div className="text-ink-3">{t.input.inverted}</div>}
               </div>
             </div>
           )}
           <div>
-            <Caption shape={[28, 28, 1]}>Grayscale pixels</Caption>
+            <Caption shape={[28, 28, 1]}>{t.input.grayscale}</Caption>
             <PixelGrid
               data={image}
               scale="gray"
               cellSize={10}
               onHover={setHover}
               highlights={hover ? [{ ...hover, tone: 'accent' }] : []}
-              label="Input image, 28 by 28 grayscale pixels"
+              label={t.input.gridLabel}
             />
           </div>
           <div className="flex min-w-0 flex-col gap-3">
             <div>
-              <Caption>Zoom · 5×5 around pixel</Caption>
+              <Caption>{t.input.zoom}</Caption>
               <div className="grid w-full max-w-[220px] grid-cols-5 gap-0.5">
                 {zoom.flatMap((row, i) =>
                   row.map((v, j) => {
@@ -225,9 +223,7 @@ export function ImageInput() {
               <br />≈ {Math.round(image[focus.row][focus.col] * 255)} / 255
             </div>
             <p className="text-xs leading-relaxed text-ink-3">
-              {hover
-                ? 'Each pixel is a single brightness value: 0 is black, 1 is white.'
-                : 'Hover the image to read individual pixel values.'}
+              {hover ? t.input.pixelHint : t.input.hoverHint}
             </p>
           </div>
         </div>
